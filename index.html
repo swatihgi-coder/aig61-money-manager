@@ -371,6 +371,51 @@ select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
+
+/* privacy notice gate & reader */
+.pv{min-height:100vh;background:var(--bg)}
+.pv-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.pv-top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:14px;padding-block:12px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));flex-wrap:wrap}
+.pv-top .logo{padding:0}
+.pv-user{margin-left:auto;font-size:13px;color:var(--muted)}
+.pv-main{max-width:1180px;margin:0 auto;display:grid;gap:20px;padding-block:28px 56px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.pv-head{display:grid;gap:8px;max-width:760px}
+.pv-head h1{font-family:var(--f-serif);font-weight:500;font-size:clamp(28px,3.4vw,38px);letter-spacing:-.02em}
+.pv-facts{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);margin-top:4px}
+.pv-facts span{display:inline-flex;align-items:center;gap:6px}
+.pv-grid{display:grid;grid-template-columns:240px minmax(0,1fr);gap:20px;align-items:start}
+.pv-toc{position:sticky;top:90px;display:grid;gap:2px;max-height:62vh;overflow:auto;padding-right:4px}
+.pv-toc button{border:0;background:none;text-align:left;padding:6px 10px;border-radius:8px;font-size:12.5px;color:var(--muted);line-height:1.35}
+.pv-toc button.top{color:var(--ink);font-weight:600;margin-top:8px}
+.pv-toc button:hover{background:var(--sunk);color:var(--ink)}
+.pv-reader-wrap{display:grid;gap:10px;min-width:0}
+.pv-reader{height:min(62vh,640px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 32px;box-shadow:var(--shadow);outline:none}
+.pv-reader:focus-visible{box-shadow:0 0 0 3px var(--nav-on)}
+.pv-progress{display:flex;align-items:center;gap:12px}
+.pv-progress .bar{flex:1}
+.pv-progress .bar i{background:var(--c2);transition:width .1s}
+.pv-accept{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 24px;display:grid;gap:14px;box-shadow:var(--shadow)}
+.pv-check{display:flex;gap:12px;align-items:flex-start;cursor:pointer;font-size:14.5px}
+.pv-check input{width:20px;height:20px;accent-color:var(--primary);margin-top:2px;flex:none}
+.pv-check.off{opacity:.6;cursor:not-allowed}
+.pv-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+.pn{max-width:76ch;font-size:14.5px;line-height:1.65;color:var(--ink2)}
+.pn h2{font-family:var(--f-serif);font-weight:500;font-size:26px;color:var(--ink);margin:6px 0 4px}
+.pn h2:not(:first-child){margin-top:34px;padding-top:24px;border-top:1px solid var(--line)}
+.pn h3{font-size:17px;font-weight:600;color:var(--ink);margin:26px 0 6px}
+.pn h4{font-size:14.5px;font-weight:600;color:var(--ink);margin:18px 0 4px}
+.pn p{margin:0 0 12px}
+.pn ul{margin:0 0 12px;padding-left:20px;display:grid;gap:6px}
+.pn a{color:var(--pos)}
+.pn-tbl{overflow-x:auto;margin:6px 0 16px;border:1px solid var(--line);border-radius:12px}
+.pn-tbl table{font-size:13.5px}
+.pn-tbl th{background:var(--sunk)}
+.pn-tbl td{vertical-align:top;border-bottom:1px solid var(--line2)}
+.pv-plain .pn{max-width:80ch}
+.mini-btn{width:100%;text-align:left;cursor:pointer}
+.mini-btn:hover{border-color:var(--c3)}
+@media (max-width:900px){.pv-grid{grid-template-columns:minmax(0,1fr)}.pv-toc{display:none}.pv-reader{padding:20px;height:60vh}}
+@media (max-width:560px){.pv-actions .btn{flex:1}.pv-user{display:none}}
 /* website base + auth forms */
 html,body{margin:0}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -827,13 +872,13 @@ function demoClient(){
     async updateUser({password}){ const u=users(), s=sess(); const e=s&&Object.keys(u).find(k=>u[k].id===s.user.id); if(e){ u[e].password=password; saveUsers(u); } return {error:null}; },
     async signOut(){ put("session",null); return {error:null}; }
   };
-  function from(t){ let f=null, ins=null; const rows=()=>get("t:"+t,[]);
+  function from(t){ let f=[], ins=null; const rows=()=>get("t:"+t,[]); const match=x=>f.every(([k,v])=>x[k]===v);
     const api={ upsert(r){ const a=rows(); const i=a.findIndex(x=>x.user_id===r.user_id); i>=0?a[i]=r:a.push(r); put("t:"+t,a); return Promise.resolve({error:null}); },
-      insert(r){ ins={...r,at:new Date().toISOString()}; const a=rows(); a.push(ins); put("t:"+t,a); return api; },
-      select(){ return api; }, eq(k,v){ f=[k,v]; return api; }, order(){ return api; }, limit(){ return api; },
-      maybeSingle(){ return Promise.resolve({data:rows().find(x=>x[f[0]]===f[1])||null,error:null}); },
+      insert(r){ const now=new Date().toISOString(); ins={...r,user_id:r.user_id||sess()?.user?.id,at:now,created_at:now,id:Date.now()}; const a=rows(); a.push(ins); put("t:"+t,a); return api; },
+      select(){ return api; }, eq(k,v){ f.push([k,v]); return api; }, order(){ return api; }, limit(){ return api; },
+      maybeSingle(){ return Promise.resolve({data:rows().find(match)||null,error:null}); },
       single(){ return Promise.resolve({data:ins,error:null}); },
-      then(res,rej){ return Promise.resolve({data:rows().filter(x=>!f||x[f[0]]===f[1]).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,8),error:null}).then(res,rej); } };
+      then(res,rej){ return Promise.resolve({data:rows().filter(match).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,20),error:null}).then(res,rej); } };
     return api; }
   return {auth,from};
 }
@@ -852,7 +897,8 @@ function authPanel(){
   const msg=`<div id="authMsg" aria-live="polite"></div>`;
   const demoNote = DEMO? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode.</b> The database isn't connected yet, so accounts and plans are saved only in this browser and no emails are sent. Add your Supabase keys to config.js to go live.</span></div>` : "";
   const demoCode = DEMO && window.__demoCode ? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode:</b> in the live site this code arrives by email. Your demo code is <b class="num" style="letter-spacing:.12em">${window.__demoCode}</b></span></div>` : "";
-  if(authView==="login") return `<span class="eyebrow">Welcome back</span><h2>Sign in</h2><p class="muted">Sign in to open your saved plan and dashboard.</p>${demoNote}
+  const declined = privacy.declinedMsg? `<div class="callout warm"><span class="chip-ic gold">${icon("shield",15)}</span><span><b>You declined the Privacy Notice, so we signed you out.</b> Your choice was recorded. You can sign in again at any time to review and accept it.</span></div>` : "";
+  if(authView==="login") return `<span class="eyebrow">Welcome back</span><h2>Sign in</h2><p class="muted">Sign in to open your saved plan and dashboard.</p>${declined}${demoNote}
     <form class="aform" data-form="login" novalidate>${fieldHTML("a-email","Email","email","you@email.com","email")}${fieldHTML("a-pass","Password","password","Your password","current-password")}
       <div class="linkrow"><span></span><button type="button" class="btn-link" data-auth="forgot">Forgot password?</button></div>${msg}
       <button class="btn btn-primary" type="submit">Sign in ${icon("arrow",16)}</button></form>
@@ -909,7 +955,7 @@ async function authSubmit(form,btn){
       const token=otpValue(); if(!/^\d{6}$/.test(token)) return setMsg("err","Enter all 6 digits of the code.");
       const {data,error}=await sb.auth.verifyOtp({email:authEmail,token,type:"signup"});
       if(error) return setMsg("err",friendly(error));
-      toast("Email verified. Welcome to MoneyManager!"); return onSignedIn(data.session);
+      toast("Email verified. Welcome to MoneyManager!"); return onSignedIn(data.session,"registration");
     }
     if(form==="forgot"){
       const email=v("a-email").toLowerCase(); if(!EMAIL_RE.test(email)) return setMsg("err","Enter a valid email address.");
@@ -938,15 +984,134 @@ async function resendCode(){
     resendAt=Date.now()+60000; if(DEMO){ render(); startResendTimer(); } else startResendTimer(); setMsg("ok","A new code is on its way.");
   }catch(e){ setMsg("err",friendly(e)); }
 }
-async function onSignedIn(session){
+async function onSignedIn(session,source){
   if(!session?.user) return;
   const u=session.user;
   account={mode:"cloud",uid:u.id,email:u.email||"",name:(u.user_metadata&&u.user_metadata.full_name)||"",dl:account.dl};
+  privacy.declinedMsg=false;
+  if(!(await ensurePrivacy(source))) return;
   await loadData(); view="dashboard"; render();
 }
 async function signOut(){
   try{ await sb.auth.signOut(); }catch(e){}
-  S=blank(); history=[]; step=0; maxStep=0; account={mode:"none",dl:account.dl}; authView="login"; view="auth"; render();
+  S=blank(); history=[]; step=0; maxStep=0; privacy.accepted=null; account={mode:"none",dl:account.dl}; authView="login"; view="auth"; render();
+}
+
+/* ================= Privacy Notice: gate, reader, consent record ================= */
+let privacy={notice:null, accepted:null, scrolled:false, source:"sign-in", declinedMsg:false, error:""};
+const READ_WPM=230;
+function noticeDate(n){ try{ return new Date(n.effective_date+"T12:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}); }catch(e){ return n.effective_date; } }
+function checkboxText(n){ return `I have read and accept the MoneyManager Privacy Notice (last updated ${noticeDate(n)}).`; }
+
+/* Small, safe Markdown renderer for the notice (headings, lists, tables, bold/italic, links). */
+function mdInline(s){
+  return esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g,"$1<em>$2</em>")
+    .replace(/(https?:\/\/[^\s<]+[^\s<.,;:)])/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+function mdToHtml(md){
+  const L=md.replace(/\r/g,"").split("\n"), out=[]; let i=0, sec=0;
+  while(i<L.length){
+    const l=L[i];
+    if(!l.trim()){ i++; continue; }
+    let m;
+    if((m=l.match(/^(#{1,3})\s+(.*)$/))){ const lv=m[1].length; const id="pn-"+(++sec); out.push(`<h${lv+1} id="${id}">${mdInline(m[2])}</h${lv+1}>`); i++; continue; }
+    if(/^\s*[*-]\s+/.test(l)){ const items=[]; while(i<L.length && /^\s*[*-]\s+/.test(L[i])){ items.push(`<li>${mdInline(L[i].replace(/^\s*[*-]\s+/,""))}</li>`); i++; } out.push(`<ul>${items.join("")}</ul>`); continue; }
+    if(/^\s*\|/.test(l)){ const rows=[]; while(i<L.length && /^\s*\|/.test(L[i])){ rows.push(L[i]); i++; }
+      const cells=r=>r.trim().replace(/^\||\|$/g,"").split("|").map(c=>c.trim());
+      const body=rows.filter(r=>!/^\s*\|\s*-{2,}/.test(r)); const head=cells(body.shift()||"");
+      out.push(`<div class="pn-tbl"><table><thead><tr>${head.map(h=>`<th>${mdInline(h.replace(/\*\*/g,""))}</th>`).join("")}</tr></thead><tbody>${body.map(r=>`<tr>${cells(r).map((c,j)=>j===0?`<td><b>${mdInline(c.replace(/\*\*/g,""))}</b></td>`:`<td>${mdInline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`); continue; }
+    const para=[]; while(i<L.length && L[i].trim() && !/^(#{1,3}\s|\s*[*-]\s|\s*\|)/.test(L[i])){ para.push(L[i]); i++; }
+    out.push(`<p>${mdInline(para.join(" "))}</p>`);
+  }
+  return out.join("\n");
+}
+function noticeToc(md){ let sec=0; return md.split("\n").map(l=>{ const m=l.match(/^(#{1,3})\s+(.*)$/); if(!m) return null; sec++; return m[1].length<=2?{id:"pn-"+sec,t:m[2],lv:m[1].length}:null; }).filter(Boolean); }
+
+async function loadNotice(){
+  if(privacy.notice) return privacy.notice;
+  if(DEMO){
+    const r=await fetch("privacy-notice.md",{cache:"no-store"}); if(!r.ok) throw new Error("Couldn't load the Privacy Notice.");
+    privacy.notice={version:"2026-11-01",title:"MoneyManager Privacy Notice",effective_date:"2026-11-01",content:await r.text(),content_sha256:"(demo)"}; return privacy.notice;
+  }
+  const {data,error}=await sb.from("privacy_notices").select("version,title,effective_date,content,content_sha256").eq("is_current",true).maybeSingle();
+  if(error) throw error; if(!data) throw new Error("No current Privacy Notice is published.");
+  privacy.notice=data; return data;
+}
+/* true = may continue; false = gate shown */
+async function ensurePrivacy(source){
+  privacy.error=""; privacy.scrolled=false; privacy.source=source||"sign-in";
+  try{
+    const n=await loadNotice();
+    const {data,error}=await sb.from("privacy_consents").select("id,created_at,decision,notice_version").eq("user_id",account.uid).eq("decision","accepted").order("created_at",{ascending:false}).limit(20);
+    if(error) throw error;
+    const rows=Array.isArray(data)?data:[];
+    const cur=rows.find(r=>r.notice_version===n.version);
+    if(cur){ privacy.accepted=cur; return true; }
+    if(rows.length && privacy.source!=="registration") privacy.source="notice-update";
+  }catch(e){ privacy.error=friendly(e); }
+  privacy.accepted=null; view="privacy"; render(); setupReader(); return false;
+}
+async function recordPrivacy(decision){
+  const n=privacy.notice;
+  const row={notice_version:n.version, decision, checkbox_text: decision==="accepted"?checkboxText(n):"Declined the MoneyManager Privacy Notice", scrolled_to_end:!!privacy.scrolled, source:privacy.source,
+    user_agent:navigator.userAgent.slice(0,500), timezone:(Intl.DateTimeFormat().resolvedOptions().timeZone||"").slice(0,80)};
+  if(DEMO) row.user_id=account.uid;
+  const {data,error}=await sb.from("privacy_consents").insert(row).select("id,created_at,decision,notice_version").single();
+  if(error) throw error; return data||row;
+}
+function setupReader(){
+  const box=$("#pvReader"); if(!box) return;
+  const upd=()=>{ const max=box.scrollHeight-box.clientHeight; const p=max<=4?1:Math.min(1,box.scrollTop/max);
+    const bar=$("#pvBar"), pct=$("#pvPct"); if(bar) bar.style.width=(p*100)+"%"; if(pct) pct.textContent=p>=0.995?"Read to the end":Math.round(p*100)+"% read";
+    if(p>=0.985 && !privacy.scrolled){ privacy.scrolled=true; const c=$("#pvCheck"); if(c){ c.disabled=false; } const h=$("#pvHint"); if(h) h.textContent="Check the box to continue."; const lab=$("#pvCheckLab"); if(lab) lab.classList.remove("off"); } };
+  box.addEventListener("scroll",upd,{passive:true}); upd();
+}
+function noticeArticle(n){ return `<article class="pn">${mdToHtml(n.content)}</article>`; }
+function readMinutes(n){ return Math.max(1,Math.round(n.content.split(/\s+/).length/READ_WPM)); }
+
+function privacyGateHTML(){
+  const n=privacy.notice, reg=privacy.source==="registration", upd=privacy.source==="notice-update";
+  return `<div class="pv">
+  <header class="pv-top"><div class="pv-top-in"><div class="logo"><span class="mark"><span>M</span></span><span class="wm">MoneyManager</span></div>
+    ${reg?`<span class="pill good">Step 3 of 3 · Account setup</span>`:upd?`<span class="pill warn">Updated notice</span>`:`<span class="pill na">Privacy</span>`}
+    <span class="pv-user">${esc(account.email||"")}</span></div></header>
+  <main class="pv-main">
+    ${privacy.error||!n?`<section class="card"><span class="eyebrow">Privacy Notice</span><h2 class="serif" style="font-size:26px">We couldn't load the Privacy Notice</h2><p class="muted">${esc(privacy.error||"Please try again.")}</p><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-act="pvRetry">Try again</button><button class="btn btn-ghost" data-act="signout">Sign out</button></div></section>`:`
+    <div class="pv-head">
+      <span class="eyebrow">${reg?"One last step":upd?"We've updated our Privacy Notice":"Before you continue"}</span>
+      <h1>${upd?"Please review the updated Privacy Notice":"Review our Privacy Notice"}</h1>
+      <p class="muted">MoneyManager works with sensitive financial and family information. Please read how we collect, use, share and protect it. You need to accept this notice to use MoneyManager.</p>
+      <div class="pv-facts"><span>${icon("file",15)} ${esc(n.title)}</span><span>${icon("cal",15)} Last updated ${noticeDate(n)}</span><span>${icon("check",15)} About ${readMinutes(n)} min read</span></div>
+    </div>
+    <div class="pv-grid">
+      <nav class="pv-toc" aria-label="Sections">${noticeToc(n.content).map(s=>`<button data-jump="${s.id}" class="${s.lv===1?"top":""}">${esc(s.t)}</button>`).join("")}</nav>
+      <div class="pv-reader-wrap">
+        <div class="pv-reader" id="pvReader" tabindex="0" aria-label="Privacy Notice text">${noticeArticle(n)}</div>
+        <div class="pv-progress"><div class="bar"><i id="pvBar" style="width:0%"></i></div><span id="pvPct" class="hint">0% read</span></div>
+      </div>
+    </div>
+    <section class="pv-accept">
+      <label class="pv-check off" id="pvCheckLab" for="pvCheck"><input type="checkbox" id="pvCheck" disabled><span><b>${esc(checkboxText(n))}</b><br><span class="hint" id="pvHint">Scroll to the end of the notice to continue.</span></span></label>
+      <div id="pvMsg" aria-live="polite"></div>
+      <div class="pv-actions"><button class="btn btn-ghost" data-act="pvDecline">Decline</button><button class="btn btn-primary" data-act="pvAccept" id="pvAccept" disabled>Accept and continue ${icon("arrow",16)}</button></div>
+      <p class="hint">Your choice is recorded with the date and time, the notice version and a fingerprint of its exact text, so we can show which notice you agreed to. Accepting this notice doesn't turn on optional features that need your separate consent.</p>
+    </section>`}
+  </main></div>`;
+}
+function noticeStandaloneHTML(){
+  const n=privacy.notice;
+  return `<div class="pv"><header class="pv-top"><div class="pv-top-in"><div class="logo"><span class="mark"><span>M</span></span><span class="wm">MoneyManager</span></div><button class="btn btn-ghost btn-sm" data-act="noticeBack">← Back to sign in</button></div></header>
+  <main class="pv-main">${n?`<div class="pv-head"><span class="eyebrow">Privacy</span><h1>${esc(n.title)}</h1><div class="pv-facts"><span>${icon("cal",15)} Last updated ${noticeDate(n)}</span><span>${icon("check",15)} About ${readMinutes(n)} min read</span></div></div>
+    <section class="card pv-plain">${noticeArticle(n)}</section>`:`<section class="card"><h2 class="serif">Loading the Privacy Notice…</h2></section>`}</main></div>`;
+}
+function pageNotice(){
+  const n=privacy.notice; if(!n) return `<section class="card"><p class="muted">Loading the Privacy Notice…</p></section>`;
+  const a=privacy.accepted;
+  return `<div style="display:grid;gap:20px">
+    <section class="card"><div class="ch"><div style="display:flex;gap:12px;align-items:center"><span class="chip-ic">${icon("shield",16)}</span><div><h3>Your privacy record</h3><div class="sub">Kept by MoneyManager as evidence of your choice</div></div></div>${a?pill("good","Accepted"):pill("warn","Not accepted")}</div>
+      <div class="facts f3"><div class="fact"><span>Notice</span><b>${esc(n.title)}</b></div><div class="fact"><span>Version</span><b>Last updated ${noticeDate(n)}</b></div><div class="fact"><span>You accepted on</span><b>${a?new Date(a.created_at).toLocaleString("en-US",{month:"long",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"}):"—"}</b></div></div>
+      <p class="hint">To ask about your information, correct it or request deletion, contact the MoneyManager Privacy Team as described in section 12.</p></section>
+    <section class="card pv-plain">${noticeArticle(n)}</section></div>`;
 }
 
 /* ---------- Persistence (Supabase tables; row-level security returns only the user's own rows) ---------- */
@@ -1043,7 +1208,7 @@ const IC={
 const icon=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||""}</svg>`;
 
 const NAV=[["dashboard","Dashboard","home"],["checkup","Financial checkup","check"],["cashflow","Cash flow & budget","wallet"],["protection","Family protection","shield"],["goals","Retirement & college","target"],["networth","Net worth","bank"],["plan","Action plan","plan"],["report","Reports & Excel","file"]];
-const TITLES={dashboard:"Dashboard",checkup:"Financial checkup",cashflow:"Cash flow & budget",protection:"Family protection",goals:"Retirement & college",networth:"Net worth",plan:"Action plan",report:"Reports"};
+const TITLES={dashboard:"Dashboard",checkup:"Financial checkup",cashflow:"Cash flow & budget",protection:"Family protection",goals:"Retirement & college",networth:"Net worth",plan:"Action plan",report:"Reports",notice:"Privacy notice"};
 let reportTab="full", sheetTab=0, cfTab="cat", menuOpen=false;
 
 /* ---------- shared data helpers ---------- */
@@ -1152,7 +1317,7 @@ function shell(page,body){
     <button class="logo" data-nav="dashboard" aria-label="MoneyManager dashboard"><span class="mark"><span>M</span></span><span class="wm">MoneyManager</span></button>
     <nav class="nav" aria-label="Main">${NAV.map(([k,l,ic])=>`<button data-nav="${k}" ${page===k?'aria-current="page"':""}>${icon(ic)}<span>${l}</span>${k==="checkup"&&maxStep<STEPS.length-1&&hasData()?'<i class="dot"></i>':""}</button>`).join("")}</nav>
     <div class="side-foot">
-      <div class="mini">${icon("sheet",18)}<div style="min-width:0"><b>Private to your account</b><span>${hasData()?`Health score ${c.score}/100`:"No one else can see your plan"}</span></div></div>
+      <button class="mini mini-btn" data-nav="notice">${icon("shield",18)}<div style="min-width:0"><b>Privacy notice</b><span>${privacy.accepted?`Accepted ${new Date(privacy.accepted.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`:"View notice"}</span></div></button>
       <div class="mini user"><span class="av">${esc(nm.slice(0,1).toUpperCase())}</span><div style="min-width:0"><b>${esc(nm)}</b><span>${esc(account.email||"Signed in")}</span></div><button class="signout" data-act="signout" aria-label="Sign out" title="Sign out">${icon("logout",16)}</button></div>
     </div>
   </aside>
@@ -1401,14 +1566,17 @@ function authHTML(){
     <p style="margin-top:auto;font-size:12.5px;color:#9FB5A6">Educational tool · not financial advice</p></section>
   <section class="auth-r"><div class="signin">
     ${authPanel()}
+    <p class="hint">By using MoneyManager you'll be asked to review and accept our <button class="btn-link" data-act="viewnotice" style="font-size:12.5px">Privacy Notice</button>.</p>
     ${authView==="login"||authView==="register"?`<div class="sample">${ringSVG(ex.score,92)}<div><span class="pill warn">Example</span><p style="margin-top:6px;font-size:13.5px"><b>The Mitchell family</b> scored ${ex.score}/100 with a ${$k(sum(ex.people.map(x=>x.gap)))} protection gap and a ${ex.actions.length}-step plan.</p></div></div>`:""}
   </div></section></div>`; }
 
 /* ---------- render ---------- */
-const PAGES={dashboard:pageDashboard,checkup:pageCheckup,cashflow:pageCashflow,protection:pageProtection,goals:pageGoals,networth:pageNetworth,plan:pageplan,report:pageReport};
+const PAGES={notice:pageNotice,dashboard:pageDashboard,checkup:pageCheckup,cashflow:pageCashflow,protection:pageProtection,goals:pageGoals,networth:pageNetworth,plan:pageplan,report:pageReport};
 function render(keepScroll){
   const y=window.scrollY, root=$("#root");
   if(view==="auth") root.innerHTML=authHTML();
+  else if(view==="privacy") root.innerHTML=privacyGateHTML();
+  else if(view==="notice" && account.mode!=="cloud") root.innerHTML=noticeStandaloneHTML();
   else root.innerHTML=shell(view,PAGES[view]());
   window.scrollTo({top:keepScroll?y:0});
 }
@@ -1425,11 +1593,12 @@ document.addEventListener("input",e=>{
   if(el.hasAttribute("data-rerender")) render(true); else refreshLive();
   scheduleSave();
 });
-document.addEventListener("change",e=>{ const el=e.target; if(el.dataset?.path && el.tagName==="SELECT"){ setP(el.dataset.path,el.value); if(el.hasAttribute("data-rerender")) render(true); else refreshLive(); scheduleSave(); }});
+document.addEventListener("change",e=>{ const el=e.target; if(el.id==="pvCheck"){ const a=$("#pvAccept"); if(a) a.disabled=!(el.checked&&privacy.scrolled); return; } if(el.dataset?.path && el.tagName==="SELECT"){ setP(el.dataset.path,el.value); if(el.hasAttribute("data-rerender")) render(true); else refreshLive(); scheduleSave(); }});
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&menuOpen){ menuOpen=false; render(true); } });
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,[data-act]"); if(!b) return;
-  if(b.dataset.nav){ nav(b.dataset.nav); return; }
+  if(b.dataset.jump){ const t=document.getElementById(b.dataset.jump), box=$("#pvReader"); if(t&&box) box.scrollTo({top:t.offsetTop-box.offsetTop-8,behavior:"smooth"}); return; }
+  if(b.dataset.nav){ if(b.dataset.nav==="notice"&&!privacy.notice){ loadNotice().then(()=>render(true)).catch(e=>toast(friendly(e))); } nav(b.dataset.nav); return; }
   if(b.dataset.go!==undefined){ go(+b.dataset.go); return; }
   if(b.dataset.rtab){ reportTab=b.dataset.rtab; render(true); return; }
   if(b.dataset.sheet!==undefined){ sheetTab=+b.dataset.sheet; render(true); return; }
@@ -1440,6 +1609,14 @@ document.addEventListener("click",e=>{
   const a=b.dataset.act; if(!a) return;
   ({
     menu: ()=>{ menuOpen=!menuOpen; render(true); },
+    pvAccept: async()=>{ const c=$("#pvCheck"); if(!c||!c.checked) return; b.disabled=true; b.textContent="Saving…";
+      try{ privacy.accepted=await recordPrivacy("accepted"); toast("Thank you. Your acceptance is recorded."); await loadData(); view="dashboard"; render(); }
+      catch(e){ b.disabled=false; b.innerHTML="Accept and continue"; const m=$("#pvMsg"); if(m) m.innerHTML=`<div class="callout err"><span>${esc(friendly(e))}</span></div>`; } },
+    pvDecline: ()=>confirmBox("Decline the Privacy Notice?","You can't use MoneyManager without accepting it. We'll record your choice and sign you out. You can sign in again any time to review and accept it.","Decline and sign out",async()=>{
+      try{ await recordPrivacy("declined"); }catch(e){} privacy.declinedMsg=true; await signOut(); }),
+    pvRetry: async()=>{ privacy.notice=null; await onSignedIn({user:{id:account.uid,email:account.email,user_metadata:{full_name:account.name}}},privacy.source); },
+    viewnotice: async()=>{ view="notice"; render(); try{ await loadNotice(); }catch(e){ toast(friendly(e)); } render(); },
+    noticeBack: ()=>{ view="auth"; render(); },
     recheck: ()=>{ account={mode:null}; render(); boot(); },
     enter: async()=>{ if(account.mode!=="cloud") return; await loadData(); view="dashboard"; render(); },
     start: ()=>go(0),

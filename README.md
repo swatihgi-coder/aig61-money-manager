@@ -125,6 +125,15 @@ In Supabase go to **Authentication → URL Configuration**:
 - [ ] **Reports & Excel → Download Excel** saves the workbook.
 - [ ] Try it on a phone.
 
+## Privacy Notice and consent records
+
+- **Gate:** after a new user verifies their email, and whenever a new notice version is published, MoneyManager shows the full Privacy Notice. The user must scroll to the end, check the box, and click **Accept and continue**. **Decline** records the choice and signs them out.
+- **The text shown comes from the database** (`privacy_notices`), the same copy that's recorded. `privacy-notice.md` in this repo is the source file for version `2026-11-01`.
+- **Evidence:** every Accept and Decline is saved in `privacy_consents` with the user, email, notice version, a SHA-256 fingerprint of the exact text, the checkbox wording, whether they scrolled to the end, IP address, browser, time zone and server time. Published notices can't be edited or deleted, and users can't change or remove their records.
+- **Enforced by the database:** plans and score history can only be read or saved after accepting the current notice.
+- **To view the records:** Supabase → SQL Editor → `select * from privacy_consent_log;`, or Table Editor → `privacy_consents`.
+- **To publish an updated notice:** see the example at the bottom of `supabase/privacy.sql`. Everyone is asked to accept it at their next sign-in.
+
 ## Updating the site later
 
 Push to GitHub and Vercel redeploys automatically. Users' saved data is in Supabase, so redeploying never touches it.
