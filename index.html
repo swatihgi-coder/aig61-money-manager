@@ -390,7 +390,6 @@ img{max-width:100%}[hidden]{display:none!important}
 </head>
 <body>
 <div id="root"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="config.js"></script>
 <script>
 
@@ -804,11 +803,12 @@ async function exportXlsx(btn){
 }
 
 
-/* ================= Website auth & storage (Supabase) ================= */
+/* ================= Website auth & storage (Google Sheets) ================= */
 const CFG = window.MM_CONFIG || {};
-const CFG_OK = /^https:\/\//.test(CFG.supabaseUrl||"") && !!CFG.supabaseAnonKey && !/YOUR-/.test((CFG.supabaseUrl||"")+(CFG.supabaseAnonKey||""));
-const DEMO = !CFG_OK;
-/* Demo mode: a stand-in for Supabase that keeps accounts and plans in this browser (localStorage)
+const SHEETS_URL = String(CFG.googleSheetsApiUrl||"").trim();
+const SHEETS = /^https:\/\/script\.google(usercontent)?\.com\//.test(SHEETS_URL);
+const DEMO = !SHEETS;
+/* Demo mode: a stand-in for the Google Sheets backend that keeps accounts and plans in this browser (localStorage)
    so every screen can be tried before the real database is connected. No emails are sent;
    the 6-digit code is shown on screen instead. Real mode never uses this. */
 function demoClient(){
@@ -821,7 +821,7 @@ function demoClient(){
     async getSession(){ return {data:{session:sess()}}; }, onAuthStateChange(){},
     async signUp({email,password,options}){ const u=users(); if(u[email]?.confirmed) return {data:{user:{identities:[]}},error:null}; u[email]={id:"demo-"+Math.random().toString(36).slice(2,10),email,password,name:options?.data?.full_name||"",confirmed:false}; saveUsers(u); newCode(email); return {data:{user:{identities:[{}]},session:null},error:null}; },
     async resend({email}){ newCode(email); return {error:null}; },
-    async verifyOtp({email,token}){ const u=users(); if(!u[email]||!checkCode(email,token)) return {data:{},error:{message:"Token has expired or is invalid"}}; u[email].confirmed=true; saveUsers(u); const s=mk(u[email]); put("session",s); return {data:{session:s},error:null}; },
+    async verifyOtp({email,token,type,password}){ const u=users(); if(!u[email]||!checkCode(email,token)) return {data:{},error:{message:"Token has expired or is invalid"}}; u[email].confirmed=true; if(type==="recovery"&&password) u[email].password=password; saveUsers(u); const s=mk(u[email]); put("session",s); return {data:{session:s},error:null}; },
     async signInWithPassword({email,password}){ const x=users()[email]; if(!x||x.password!==password) return {data:{},error:{message:"Invalid login credentials"}}; if(!x.confirmed) return {data:{},error:{message:"Email not confirmed"}}; const s=mk(x); put("session",s); return {data:{session:s},error:null}; },
     async resetPasswordForEmail(email){ if(users()[email]) newCode(email); else window.__demoCode=null; return {error:null}; },
     async updateUser({password}){ const u=users(), s=sess(); const e=s&&Object.keys(u).find(k=>u[k].id===s.user.id); if(e){ u[e].password=password; saveUsers(u); } return {error:null}; },
@@ -837,7 +837,47 @@ function demoClient(){
     return api; }
   return {auth,from};
 }
-const sb = DEMO ? demoClient() : (window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null);
+/* Google Sheets mode: every call goes to the Apps Script web app attached to your sheet.
+   The browser keeps only a sign-in token; all plans and history live in the sheet. */
+function sheetsClient(url){
+  const TK="mm:session"; let session=null;
+  try{ session=JSON.parse(localStorage.getItem(TK)||"null"); }catch(e){}
+  const keep=s=>{ session=s; try{ s?localStorage.setItem(TK,JSON.stringify(s)):localStorage.removeItem(TK); }catch(e){} };
+  async function call(action,payload={}){
+    const res=await fetch(url,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...payload})});
+    if(!res.ok) throw new Error("network: "+res.status);
+    const out=await res.json();
+    if(!out.ok){ if(/session has ended/i.test(out.error||"")) keep(null); throw new Error(out.error||"Something went wrong."); }
+    return out;
+  }
+  const wrap=async fn=>{ try{ return {...(await fn()),error:null}; }catch(e){ return {data:{},error:{message:e.message}}; } };
+  const asSession=s=>({token:s.token,user:{id:s.email,email:s.email,user_metadata:{full_name:s.name}}});
+  const auth={
+    async getSession(){ if(!session) return {data:{session:null}}; try{ const r=await call("session",{token:session.token}); return {data:{session:asSession(r.session)}}; }catch(e){ if(/session has ended/i.test(e.message)) return {data:{session:null}}; throw e; } },
+    onAuthStateChange(){},
+    signUp:({email,password,options})=>wrap(async()=>{ await call("register",{email,password,name:options?.data?.full_name||""}); return {data:{user:{identities:[{}]},session:null}}; }),
+    resend:({email,type})=>wrap(async()=>{ await call("resend",{email,purpose:type==="recovery"?"recovery":"signup"}); return {}; }),
+    verifyOtp:({email,token,type,password})=>wrap(async()=>{ const r=type==="recovery"? await call("reset",{email,code:token,password}) : await call("verify",{email,code:token}); keep(r.session); return {data:{session:asSession(r.session)}}; }),
+    signInWithPassword:({email,password})=>wrap(async()=>{ const r=await call("login",{email,password}); keep(r.session); return {data:{session:asSession(r.session)}}; }),
+    resetPasswordForEmail:(email)=>wrap(async()=>{ await call("forgot",{email}); return {}; }),
+    async signOut(){ const t=session?.token; keep(null); if(t){ try{ await call("logout",{token:t}); }catch(e){} } return {error:null}; }
+  };
+  function from(t){
+    let row=null, op="select";
+    const run=async()=>{ const token=session?.token;
+      if(t==="plans"&&op==="upsert"){ await call("savePlan",{token,state:row.state,step:row.step,max_step:row.max_step,summary:row.summary}); return {data:null}; }
+      if(t==="plans"){ const r=await call("loadPlan",{token}); return {data:r.plan}; }
+      if(t==="checkups"&&op==="insert"){ const r=await call("addCheckup",{token,...row}); return {data:r.checkup}; }
+      const r=await call("listCheckups",{token}); return {data:r.checkups}; };
+    const go=()=>wrap(run);
+    const api={ upsert(r){ op="upsert"; row=r; return go(); }, insert(r){ op="insert"; row=r; return api; },
+      select(){ return api; }, eq(){ return api; }, order(){ return api; }, limit(){ return api; },
+      maybeSingle:go, single:go, then(res,rej){ return go().then(res,rej); } };
+    return api;
+  }
+  return {auth,from};
+}
+const sb = SHEETS ? sheetsClient(SHEETS_URL) : demoClient();
 let authView="login", authEmail="", authFlow="signup", resendAt=0, resendTimer=null;
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -848,9 +888,9 @@ function resendLabel(){ const s=Math.ceil((resendAt-Date.now())/1000); return s>
 
 function authPanel(){
   if(account.mode===null) return `<span class="eyebrow">Secure sign-in</span><h2>Checking your session…</h2><p class="muted">One moment.</p><div class="bar"><i style="width:40%"></i></div>`;
-  if(!sb) return `<span class="eyebrow">Setup needed</span><h2>Connect your database</h2><p class="muted">Add your Supabase project URL and anon key to <b>config.js</b>, then reload this page. The setup guide (README.md) walks through every step.</p>`;
+  if(!sb) return `<span class="eyebrow">Setup needed</span><h2>Connect your database</h2><p class="muted">Add your Google Sheets web app link to <b>config.js</b>, then reload this page. The setup guide (README.md) walks through every step.</p>`;
   const msg=`<div id="authMsg" aria-live="polite"></div>`;
-  const demoNote = DEMO? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode.</b> The database isn't connected yet, so accounts and plans are saved only in this browser and no emails are sent. Add your Supabase keys to config.js to go live.</span></div>` : "";
+  const demoNote = DEMO? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode.</b> The database isn't connected yet, so accounts and plans are saved only in this browser and no emails are sent. Add your Google Sheets web app link to config.js to go live.</span></div>` : "";
   const demoCode = DEMO && window.__demoCode ? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode:</b> in the live site this code arrives by email. Your demo code is <b class="num" style="letter-spacing:.12em">${window.__demoCode}</b></span></div>` : "";
   if(authView==="login") return `<span class="eyebrow">Welcome back</span><h2>Sign in</h2><p class="muted">Sign in to open your saved plan and dashboard.</p>${demoNote}
     <form class="aform" data-form="login" novalidate>${fieldHTML("a-email","Email","email","you@email.com","email")}${fieldHTML("a-pass","Password","password","Your password","current-password")}
@@ -902,7 +942,7 @@ async function authSubmit(form,btn){
       const {data,error}=await sb.auth.signUp({email,password:p1,options:{data:{full_name:name},emailRedirectTo:location.origin+location.pathname}});
       if(error) return setMsg("err",/registered|exists/i.test(error.message)?"An account with this email already exists. Sign in instead.":friendly(error));
       if(data.user && Array.isArray(data.user.identities) && data.user.identities.length===0) return setMsg("err","An account with this email already exists. Sign in instead.");
-      if(data.session) return onSignedIn(data.session);   // email confirmation turned off in Supabase
+      if(data.session) return onSignedIn(data.session);
       authEmail=email; authFlow="signup"; resendAt=Date.now()+60000; return goAuth("verify");
     }
     if(form==="verify"){
@@ -922,9 +962,8 @@ async function authSubmit(form,btn){
       if(!/^\d{6}$/.test(token)) return setMsg("err","Enter all 6 digits of the code.");
       if(p1.length<8) return setMsg("err","Your new password needs at least 8 characters.");
       if(p1!==p2) return setMsg("err","The two passwords don't match.");
-      const {data,error}=await sb.auth.verifyOtp({email:authEmail,token,type:"recovery"});
+      const {data,error}=await sb.auth.verifyOtp({email:authEmail,token,type:"recovery",password:p1});
       if(error) return setMsg("err",friendly(error));
-      const up=await sb.auth.updateUser({password:p1}); if(up.error) return setMsg("err",friendly(up.error));
       toast("Password updated"); return onSignedIn(data.session);
     }
   } catch(e){ setMsg("err",friendly(e)); }
@@ -949,7 +988,7 @@ async function signOut(){
   S=blank(); history=[]; step=0; maxStep=0; account={mode:"none",dl:account.dl}; authView="login"; view="auth"; render();
 }
 
-/* ---------- Persistence (Supabase tables with row-level security) ---------- */
+/* ---------- Persistence (Google Sheet via Apps Script; each user only gets their own rows) ---------- */
 let saveTimer=null, saving=false, again=false;
 function payload(){ return { state: JSON.stringify(S), step, maxStep, updatedAt: new Date().toISOString(), score: calc().score }; }
 function chip(cls,txt){ const el=$("#saveChip"); if(!el) return; el.className="sync "+cls; el.querySelector("span").textContent=txt; }
@@ -960,7 +999,9 @@ async function doSave(){
   saving=true;
   try{
     const p=payload();
-    const {error}=await sb.from("plans").upsert({user_id:account.uid,state:S,step:p.step,max_step:p.maxStep,score:p.score,updated_at:p.updatedAt});
+    const c=calc(), nw=netWorth();
+    const summary={name:S.profile.name||account.name, health_score:c.score, household_income:c.grossAnnual, monthly_surplus:c.surplus, net_worth:nw.net, protection_gap:sum(c.people.map(x=>x.gap)), retirement_gap:c.retGap, checkup_step:maxStep>=STEPS.length-1?"Complete":`Step ${maxStep+1} of ${STEPS.length}`};
+    const {error}=await sb.from("plans").upsert({user_id:account.uid,state:S,step:p.step,max_step:p.maxStep,score:p.score,updated_at:p.updatedAt,summary});
     if(error) throw error;
     chip("",DEMO?"Saved in this browser":"Saved to your account");
   }catch(e){ chip("err","Couldn't save. Check your connection"); }
@@ -1483,7 +1524,7 @@ async function boot(){
   try{
     const {data}=await sb.auth.getSession();
     if(data?.session){ await onSignedIn(data.session); return; }
-  }catch(e){}
+  }catch(e){ account.mode="none"; render(); toast("Can't reach the server right now. Check your connection and reload."); return; }
   account.mode="none"; render();
   sb.auth.onAuthStateChange((evt)=>{ if(evt==="SIGNED_OUT" && account.mode==="cloud"){ S=blank(); history=[]; account={mode:"none",dl:account.dl}; view="auth"; authView="login"; render(); } });
 }

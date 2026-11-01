@@ -1,10 +1,11 @@
 /* MoneyManager settings — the only file you need to edit.
-   Find these values in Supabase: Project Settings → API (or "Connect" → App frameworks).
-   The anon / publishable key is safe to put in a website: row-level security
-   (supabase/schema.sql) makes sure each user can only read and write their own data. */
+
+   googleSheetsApiUrl: the "Web app URL" you get when you deploy
+   google-apps-script/Code.gs from your Google Sheet (README → "Connect Google Sheets").
+   It looks like https://script.google.com/macros/s/AKfy..../exec
+   Until it's filled in, the site runs in Demo mode (data stays in each visitor's browser). */
 window.MM_CONFIG = {
-  supabaseUrl: "https://YOUR-PROJECT-ID.supabase.co",
-  supabaseAnonKey: "YOUR-ANON-OR-PUBLISHABLE-KEY",
+  googleSheetsApiUrl: "",
 
   // Shown in the "Want help putting this plan in place?" box on every report
   advisor: { org: "DareToDreams Financial Group", phone: "870-543-0062" }
