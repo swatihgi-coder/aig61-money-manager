@@ -1,0 +1,1494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="MoneyManager: a personal financial checkup with DIME analysis, retirement and college planning, and an affordable action plan.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%230F3D2C'/><text x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-size='20' font-weight='700' fill='%23D9B54A'>M</text></svg>">
+<title>MoneyManager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app shell — fixed left sidebar (nav + account), top bar with serif page title, 12-column card grid content. Warm paper ground, white cards, forest green + gold. */
+:root{
+  --bg:#F6F5F0; --surface:#FFFFFF; --sunk:#F2F1EB; --track:#ECEAE3; --line:#E6E4DC; --line2:#EFEDE6;
+  --ink:#1A1E1B; --ink2:#3A3F3B; --muted:#6C716B; --faint:#9A9E97;
+  --primary:#0F3D2C; --primary-ink:#FFFFFF; --primary-hover:#155038;
+  --hero:#0F3D2C;             /* big serif numbers */
+  --pos:#1E7A4C; --pos-bg:#E5F1E8;
+  --neg:#C2453A; --neg-bg:#F9E5E2;
+  --gold:#C9A12B; --gold-ink:#8A6A10; --gold-bg:#F6EED7; --gold-line:#E6CF8C;
+  --nav-on:#E4F0E7;
+  --c1:#0F3D2C; --c2:#1E7A4C; --c3:#4FA676; --c4:#A9D3B8; --c5:#C9A12B; --c6:#E3CB7E; --c7:#CFCDC4; --c8:#E6E4DC;
+  --shadow:0 1px 2px rgba(20,30,24,.04),0 2px 10px rgba(20,30,24,.04);
+  --f-serif:"Fraunces", Georgia, "Times New Roman", serif;
+  --f-sans:"Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1210; --surface:#161B18; --sunk:#1B211D; --track:#252C27; --line:#262E29; --line2:#202722;
+  --ink:#E9ECE7; --ink2:#CBD1CA; --muted:#98A097; --faint:#6E766E;
+  --primary:#2E8F5C; --primary-ink:#FFFFFF; --primary-hover:#35A068; --hero:#8FD3AB;
+  --pos:#5CC08A; --pos-bg:#16301F; --neg:#EE8174; --neg-bg:#3A1D1A;
+  --gold:#D8B243; --gold-ink:#E6C766; --gold-bg:#2E2814; --gold-line:#5E4E1C; --nav-on:#1C3326;
+  --c1:#2E8F5C; --c2:#4FB27A; --c3:#7FCB9E; --c4:#3B5E48; --c5:#D8B243; --c6:#8D7531; --c7:#4A524C; --c8:#2E3631;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1210; --surface:#161B18; --sunk:#1B211D; --track:#252C27; --line:#262E29; --line2:#202722;
+  --ink:#E9ECE7; --ink2:#CBD1CA; --muted:#98A097; --faint:#6E766E;
+  --primary:#2E8F5C; --primary-ink:#FFFFFF; --primary-hover:#35A068; --hero:#8FD3AB;
+  --pos:#5CC08A; --pos-bg:#16301F; --neg:#EE8174; --neg-bg:#3A1D1A;
+  --gold:#D8B243; --gold-ink:#E6C766; --gold-bg:#2E2814; --gold-line:#5E4E1C; --nav-on:#1C3326;
+  --c1:#2E8F5C; --c2:#4FB27A; --c3:#7FCB9E; --c4:#3B5E48; --c5:#D8B243; --c6:#8D7531; --c7:#4A524C; --c8:#2E3631;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-sans);font-size:14.5px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;line-height:1.2;text-wrap:balance;font-weight:600}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.serif{font-family:var(--f-serif);font-weight:500;letter-spacing:-.01em;font-variation-settings:"opsz" 72}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.ic{flex:none}
+.eyebrow{font-size:11.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 14px;padding-left:max(14px,env(safe-area-inset-left,0px));gap:6px;z-index:30}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 6px 14px;border:0;background:none;text-align:left}
+.logo .mark{width:34px;height:34px;border-radius:8px;background:#0F3D2C;display:grid;place-items:center;flex:none}
+.logo .mark span{font-family:var(--f-serif);font-weight:600;color:#D9B54A;font-size:21px;line-height:1;margin-top:1px}
+.logo .wm{font-family:var(--f-serif);font-size:20px;font-weight:500;letter-spacing:-.01em}
+.nav{display:grid;gap:2px}
+.nav button{display:flex;align-items:center;gap:11px;border:0;background:none;padding:9px 12px;border-radius:9px;font-size:14.5px;color:var(--ink2);text-align:left;font-weight:500}
+.nav button:hover{background:var(--sunk)}
+.nav button[aria-current="page"]{background:var(--nav-on);color:var(--ink);font-weight:600}
+.nav button .dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.side-foot{margin-top:auto;display:grid;gap:8px}
+.mini{display:flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.35;min-width:0}
+.mini b{display:block;font-size:13px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini span{color:var(--muted)}
+.mini .av{width:30px;height:30px;border-radius:50%;background:var(--gold-bg);color:var(--gold-ink);display:grid;place-items:center;font-weight:600;flex:none}
+.mini.user{background:var(--surface)}
+.scrim{display:none}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top-in{display:flex;align-items:center;gap:12px;padding-block:14px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));flex-wrap:wrap}
+.top h1{font-family:var(--f-serif);font-size:27px;font-weight:500;letter-spacing:-.015em;margin-right:6px}
+.menu-btn{display:none}
+.pillbtn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 12px;font-size:13.5px;font-weight:500;color:var(--ink2);white-space:nowrap}
+.sync{display:inline-flex;align-items:center;gap:7px;background:var(--pos-bg);color:var(--pos);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--pos)}
+.sync.busy{background:var(--gold-bg);color:var(--gold-ink)}.sync.busy i{background:var(--gold)}
+.sync.err{background:var(--neg-bg);color:var(--neg)}.sync.err i{background:var(--neg)}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.theme{display:inline-flex;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px}
+.theme button{border:0;background:none;width:30px;height:28px;border-radius:999px;display:grid;place-items:center;color:var(--muted)}
+.theme button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink)}
+.content{padding-block:26px 64px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));max-width:1320px;width:100%}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:9px;padding:10px 16px;font-weight:600;font-size:14px;border:1px solid transparent;white-space:nowrap;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--primary);color:var(--primary-ink)}
+.btn-primary:hover{background:var(--primary-hover)}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--sunk)}
+.btn-gold{background:var(--gold-bg);border-color:var(--gold-line);color:var(--gold-ink)}
+.btn-danger{background:var(--neg);color:#fff}
+.btn-sm{padding:7px 12px;font-size:13px}
+.btn-link{background:none;border:0;color:var(--pos);font-weight:600;padding:2px 0;font-size:13.5px;display:inline-flex;align-items:center;gap:4px}
+.btn:disabled{opacity:.6;cursor:default}
+
+/* ---------- cards & grid ---------- */
+.grid12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px}
+.s12{grid-column:span 12}.s8{grid-column:span 8}.s7{grid-column:span 7}.s6{grid-column:span 6}.s5{grid-column:span 5}.s4{grid-column:span 4}.s3{grid-column:span 3}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px;box-shadow:var(--shadow);display:grid;gap:16px;align-content:start;min-width:0}
+.card.gold{border-color:var(--gold-line)}
+.card.tint-gold{background:var(--gold-bg);border-color:var(--gold-line)}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.ch h3{font-size:16px;font-weight:600}
+.ch .sub{font-size:12.5px;color:var(--muted);margin-top:2px}
+.ch h2.serif{font-size:26px}
+.greet h2{font-family:var(--f-serif);font-size:34px;font-weight:500;letter-spacing:-.02em}
+.greet p{color:var(--muted);margin-top:4px}
+.summary-line{color:var(--muted);font-size:14.5px;display:flex;gap:18px;flex-wrap:wrap}
+.summary-line b{color:var(--ink)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow);display:grid;gap:8px;min-width:0}
+.kcard.neg-tint{background:var(--neg-bg);border-color:transparent}
+.kh{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13.5px;gap:8px}
+.kv{font-family:var(--f-serif);font-size:30px;font-weight:500;letter-spacing:-.02em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:lining-nums tabular-nums}
+.kv.hero{color:var(--hero)}
+.kv.negv{color:var(--neg)}
+.kf{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;line-height:1.4}
+.pill.good{background:var(--pos-bg);color:var(--pos)}
+.pill.warn{background:var(--gold-bg);color:var(--gold-ink)}
+.pill.bad{background:var(--neg-bg);color:var(--neg)}
+.pill.na{background:var(--sunk);color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--sunk);color:var(--ink2);white-space:nowrap}
+
+/* bars */
+.bar{height:7px;background:var(--track);border-radius:99px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--c2)}
+.bar i.good{background:var(--c2)}.bar i.warn{background:var(--gold)}.bar i.bad{background:var(--neg)}
+.bar.lg{height:10px}
+.hatch{background:repeating-linear-gradient(-45deg,var(--gold) 0 3px,transparent 3px 7px)!important;box-shadow:inset 0 0 0 1px var(--gold)}
+.hb{display:grid;gap:7px}
+.hb-l{display:flex;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:500}
+.hb-l b{font-weight:600}
+.stackbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--track);gap:2px}
+.stackbar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+/* ring */
+.ring{position:relative;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .rc{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .rc b{font-family:var(--f-serif);font-weight:500;letter-spacing:-.03em;line-height:1;color:var(--ink)}
+.ring .rc span{color:var(--muted);font-size:12.5px;margin-top:4px}
+
+/* featured */
+.feat{display:grid;grid-template-columns:auto minmax(0,1fr);gap:30px;align-items:center}
+.feat h2{font-family:var(--f-serif);font-size:26px;font-weight:500;letter-spacing:-.015em}
+.big{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
+.facts.f3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.fact span{display:block;font-size:12.5px;color:var(--muted)}
+.fact b{font-size:15px;font-weight:600}
+.callbox{border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13.5px}
+.callbox.neg{background:var(--neg-bg)}.callbox.gold{background:var(--gold-bg)}.callbox.good{background:var(--pos-bg)}
+.callbox .big{font-size:22px}
+.callbox.neg .big{color:var(--neg)}
+
+/* donut */
+.donut{position:relative}
+.donut svg{width:100%;height:100%}
+.donut .dc{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.donut .dc b{font-family:var(--f-serif);font-size:24px;font-weight:500}
+.donut .dc span{font-size:12px;color:var(--muted)}
+.dleg{display:grid;gap:9px;font-size:13.5px}
+.dleg div{display:grid;grid-template-columns:10px minmax(0,1fr) auto 50px;gap:10px;align-items:center}
+.dleg i{width:10px;height:10px;border-radius:3px}
+.dleg .p{color:var(--muted);text-align:right}
+
+/* tables */
+.tbl{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12.5px;font-weight:500;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:13px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+td.r,th.r{text-align:right}
+td b{font-weight:600}
+tr.total td{border-bottom:0;font-weight:600;background:var(--sunk)}
+.cat{display:flex;align-items:center;gap:10px}
+.chip-ic{width:30px;height:30px;border-radius:8px;background:var(--pos-bg);color:var(--pos);display:grid;place-items:center;flex:none}
+.chip-ic.gold{background:var(--gold-bg);color:var(--gold-ink)}
+
+/* goal cards */
+.goals{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.gcard{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:10px;background:var(--surface);align-content:start}
+.gcard .gh{display:flex;align-items:center;gap:10px}
+.gcard .gh b{font-weight:600;font-size:14.5px;line-height:1.25}
+.gcard .gh .pill{margin-left:auto}
+.gcard .gv{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.gcard .gv .serif{font-size:22px;color:var(--hero)}
+.gcard .note{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line2);padding-top:10px}
+
+/* insights / recs */
+.ins{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.ins li{position:relative;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+.ins li::before{content:"";position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.ins b{color:var(--ink)}
+.recs{display:grid;gap:2px}
+.rec{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;padding:14px 0;border-bottom:1px solid var(--line2)}
+.rec:last-child{border-bottom:0}
+.rec .n{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:600;font-size:13px}
+.rec .n.bad{background:var(--neg-bg);color:var(--neg)}.rec .n.warn{background:var(--gold-bg);color:var(--gold-ink)}.rec .n.good{background:var(--pos-bg);color:var(--pos)}
+.rec h4{font-size:14.5px;font-weight:600;margin-bottom:3px}
+.rec p{font-size:13.5px;color:var(--muted)}
+.wins{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.wins li{display:flex;gap:10px;font-size:14px}
+.wins li .ck{width:20px;height:20px;border-radius:50%;background:var(--pos-bg);color:var(--pos);display:grid;place-items:center;flex:none;margin-top:1px}
+
+/* plan */
+.plan{display:grid}
+.prow{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 116px;gap:18px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line2)}
+.prow:last-child{border-bottom:0}
+.prow .pl b{font-weight:600}
+.prow .pl span{display:block;font-size:12.5px;color:var(--muted)}
+.prow .pt{display:grid;gap:5px;font-size:13px}
+.ptrack{position:relative;height:10px;background:var(--track);border-radius:99px;overflow:hidden}
+.ptrack i{position:absolute;inset:0 auto 0 0;border-radius:99px}
+.ptrack .need{background:repeating-linear-gradient(-45deg,var(--gold) 0 3px,transparent 3px 7px);box-shadow:inset 0 0 0 1px var(--gold-line)}
+.ptrack .fund{background:var(--c2)}
+.prow .pill{justify-self:end}
+.timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.tl{border:1px solid var(--line);border-radius:14px;padding:18px;display:grid;gap:10px;align-content:start;background:var(--surface)}
+.tl h4{font-family:var(--f-serif);font-size:19px;font-weight:500}
+.tl ul{margin:0;padding-left:18px;display:grid;gap:7px;font-size:13.5px;color:var(--ink2)}
+
+/* segmented & tabs */
+.seg{display:inline-flex;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{border:0;background:none;padding:7px 14px;border-radius:8px;font-weight:500;font-size:13.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg.dark button[aria-pressed="true"]{background:var(--primary);color:var(--primary-ink)}
+
+/* range */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:99px;background:linear-gradient(90deg,var(--gold) 0 var(--p,50%),var(--ink2) var(--p,50%) 100%);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--gold)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--gold);border:3px solid var(--surface);box-shadow:0 0 0 1px var(--gold)}
+
+/* ---------- forms (checkup) ---------- */
+.stepper{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:thin}
+.stepper button{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px 6px 6px;font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+.stepper button .n{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:600;background:var(--sunk);color:var(--muted)}
+.stepper button.done .n{background:var(--pos-bg);color:var(--pos)}
+.stepper button.on{border-color:var(--primary);color:var(--ink);font-weight:600}
+.stepper button.on .n{background:var(--primary);color:var(--primary-ink)}
+.ck{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:20px;align-items:start}
+.panel-head{display:grid;gap:6px}
+.panel-head h2{font-family:var(--f-serif);font-size:28px;font-weight:500;letter-spacing:-.015em}
+.panel-head p{color:var(--muted);max-width:44em}
+.sub{display:grid;gap:14px;padding-top:4px}
+.sub h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px}
+.sub h3 .badge{font-size:11.5px;background:var(--pos-bg);color:var(--pos);padding:2px 8px;border-radius:6px;font-weight:600}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.field{display:grid;gap:6px;min-width:0}
+.lbl{font-size:13px;font-weight:500;color:var(--ink2)}
+.hint{font-size:12.5px;color:var(--muted)}
+.inwrap{display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.inwrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--nav-on)}
+.inwrap span.pre,.inwrap span.suf{padding:0 11px;color:var(--muted);font-size:13.5px;align-self:stretch;display:grid;place-items:center}
+.inwrap span.pre{padding-right:0}
+.inwrap input,.inwrap select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);padding:11px 12px;outline:none;font-size:14.5px}
+.inwrap input.n{font-variant-numeric:tabular-nums}
+select{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px!important}
+.toggle{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--primary);flex:none}
+.toggle .t{font-weight:500}
+.toggle .s{font-size:12.5px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:500;color:var(--ink2)}
+.chip[aria-pressed="true"]{background:var(--pos-bg);border-color:var(--pos);color:var(--pos)}
+.row-card{border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:12px;background:var(--sunk)}
+.row-card .rh{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600}
+.navbar{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid var(--line);padding-top:18px;flex-wrap:wrap}
+.callout{background:var(--pos-bg);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--ink2)}
+.callout b{color:var(--ink)}
+.callout.warm{background:var(--gold-bg)}
+.facts-list{display:grid}
+.facts-list div{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+.facts-list div:last-child{border-bottom:0}
+.facts-list span{color:var(--muted)}
+.facts-list b{font-weight:600}
+
+/* ---------- auth ---------- */
+.auth{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr}
+.auth-l{background:#0F3D2C;color:#F2EFE4;padding-block:48px;padding-left:max(48px,env(safe-area-inset-left,0px));padding-right:48px;display:flex;flex-direction:column;gap:28px}
+.auth-l .logo .wm{color:#F2EFE4}
+.auth-l .logo .mark{box-shadow:0 0 0 1px #4F7A63}
+.auth-l h1{font-family:var(--f-serif);font-size:clamp(36px,4.4vw,56px);font-weight:500;letter-spacing:-.025em;line-height:1.05}
+.auth-l h1 em{font-style:italic;color:#D9B54A}
+.auth-l p.lede{font-size:17px;color:#C9D6CC;max-width:32em}
+.auth-l ol{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px;font-size:14px;color:#DCE5DD}
+.auth-l ol li{display:flex;gap:10px;align-items:center}
+.auth-l ol li span{width:22px;height:22px;border-radius:50%;border:1px solid #4F7A63;display:grid;place-items:center;font-size:11px;color:#D9B54A;flex:none}
+.auth-r{display:grid;place-items:center;padding-block:40px;padding-left:24px;padding-right:max(24px,env(safe-area-inset-right,0px))}
+.signin{width:100%;max-width:420px;display:grid;gap:18px}
+.signin h2{font-family:var(--f-serif);font-size:30px;font-weight:500}
+.sample{border-top:1px solid var(--line);padding-top:18px;display:flex;gap:16px;align-items:center}
+
+/* ---------- spreadsheet ---------- */
+.sheetwrap{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;align-items:start}
+.xl{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;min-width:0;display:grid;box-shadow:var(--shadow)}
+.xl-bar{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap;font-size:13px}
+.xl-grid{overflow:auto;max-height:640px}
+.xl-grid table{border-collapse:collapse;font-size:13px;width:max-content;min-width:100%}
+.xl-grid th{position:sticky;top:0;background:var(--sunk);color:var(--muted);font-weight:500;font-size:11.5px;text-align:center;padding:5px 8px;border:1px solid var(--line);z-index:1}
+.xl-grid th.rn{position:sticky;left:0;width:38px;min-width:38px;z-index:2}
+.xl-grid td{border:1px solid var(--line2);padding:5px 10px;white-space:nowrap;height:30px}
+.xl-grid td.r{text-align:right;font-variant-numeric:tabular-nums}
+.xl-grid td.b{font-weight:600}
+.xl-grid td.hd{background:var(--primary);color:var(--primary-ink);font-weight:600;border-color:var(--primary)}
+.xl-grid td.neg{color:var(--neg)}
+.xl-tabs{display:flex;gap:2px;overflow-x:auto;border-top:1px solid var(--line);background:var(--sunk);padding:0 8px}
+.xl-tabs button{border:0;background:none;padding:9px 14px;font-size:12.5px;font-weight:500;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent}
+.xl-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);border-bottom-color:var(--gold);font-weight:600}
+.xl-chart{position:sticky;top:96px}
+
+/* report */
+.cta{background:#0F3D2C;color:#F2EFE4;border-radius:16px;padding:26px 28px;display:flex;gap:20px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.cta h3{font-family:var(--f-serif);font-size:24px;font-weight:500}
+.cta p{color:#C9D6CC}
+.cta .phone{font-size:22px;font-weight:600;user-select:all;letter-spacing:.01em}
+.disc{font-size:12.5px;color:var(--muted);max-width:75em}
+.chart text{fill:var(--muted);font-family:var(--f-sans);font-size:11.5px}
+
+/* overlays */
+.modal{position:fixed;inset:0;background:rgba(10,20,15,.45);display:grid;place-items:center;z-index:80;padding:16px}
+.modal .box{background:var(--surface);border-radius:16px;padding:24px;max-width:420px;width:100%;display:grid;gap:14px;box-shadow:var(--shadow)}
+.modal h3{font-family:var(--f-serif);font-size:22px;font-weight:500}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:500;z-index:90;font-size:13.5px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1280px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1100px){.s8,.s7,.s6,.s5,.s4{grid-column:span 12}.s3{grid-column:span 6}.ck{grid-template-columns:minmax(0,1fr)}.sheetwrap{grid-template-columns:minmax(0,1fr)}.xl-chart{position:static}}
+@media (max-width:960px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;inset:0 auto 0 0;width:264px;transform:translateX(-102%);transition:transform .2s;box-shadow:0 0 40px rgba(0,0,0,.2);padding-top:max(16px,env(safe-area-inset-top,0px))}
+  .side.open{transform:none}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(10,20,15,.35);z-index:25}
+  .menu-btn{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);background:var(--surface);border-radius:9px}
+  .auth{grid-template-columns:1fr}.auth-l{padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:24px;padding-block:32px}
+  .top-in,.content{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .timeline{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  .kpis,.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}.kv{font-size:24px}
+  .s3{grid-column:span 12}
+  .feat{grid-template-columns:1fr;justify-items:start}
+  .g2,.g3,.facts.f3{grid-template-columns:minmax(0,1fr)}
+  .prow{grid-template-columns:minmax(0,1fr)}.prow .pill{justify-self:start}
+  .top h1{font-size:22px}.top .datepill,.top .sync span{display:none}
+  .card{padding:18px}
+  .auth-l ol{grid-template-columns:1fr}
+  .greet h2{font-size:28px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* website base + auth forms */
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+img{max-width:100%}[hidden]{display:none!important}
+.aform{display:grid;gap:14px}
+.inwrap .eye{border:0;background:none;color:var(--muted);padding:0 12px;align-self:stretch;display:grid;place-items:center}
+.otp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.otp input{height:56px;min-width:0;text-align:center;font-size:24px;font-family:var(--f-serif);font-weight:500;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+.otp input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--nav-on)}
+.callout.err{background:var(--neg-bg);color:var(--neg)}
+.linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.or{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:13px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.signout{margin-left:auto;border:0;background:none;color:var(--muted);width:30px;height:30px;border-radius:8px;display:grid;place-items:center;flex:none}
+.signout:hover{background:var(--sunk);color:var(--neg)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+
+/* ---------- Config ---------- */
+const ADVISOR = (window.MM_CONFIG && window.MM_CONFIG.advisor) || { org: "DareToDreams Financial Group", phone: "870-543-0062" };
+const RATE = 0.06;          // assumed annual growth for savings projections
+const INFL = 0.03;          // general inflation
+const EDU_INFL = 0.05;      // college cost inflation
+
+/* ---------- Helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const usd = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",maximumFractionDigits:0});
+const $f = n => usd.format(Math.round(n||0));
+const $k = n => { n=Math.round(n||0); const a=Math.abs(n); if(a>=1e6) return (n<0?"-":"")+"$"+(a/1e6).toFixed(a>=1e7?1:2).replace(/\.0+$/,"")+"M"; if(a>=1e4) return (n<0?"-":"")+"$"+Math.round(a/1e3)+"K"; return $f(n); };
+const pct = n => (isFinite(n)? Math.round(n*100) : 0)+"%";
+const sum = a => a.reduce((x,y)=>x+(+y||0),0);
+const clamp = (x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const withTimeout = (p,ms)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]);
+const fv = (pv,pmt,years,rate=RATE)=>{ const n=Math.max(0,Math.round(years*12)), r=rate/12; if(n===0) return pv; const g=Math.pow(1+r,n); return pv*g + pmt*((g-1)/r); };
+const annuityFactor = (years,rate=RATE)=>{ const n=Math.max(0,Math.round(years*12)), r=rate/12; return n? (Math.pow(1+r,n)-1)/r : 0; };
+
+/* ---------- State ---------- */
+function blank(){
+  return {
+    profile:{ name:"", age:"", marital:"married", spouseName:"", spouseAge:"", state:"", kids:[], occupation:"" },
+    income:{ primary:0, spouse:0, other:0, takeHome:0 },
+    expenses:{ housing:0, utilities:0, food:0, transport:0, insurance:0, childcare:0, debt:0, phone:0, family:0, fun:0, other:0 },
+    flow:{ saving:0, investing:0 },
+    dime:{ cc:0, auto:0, student:0, otherDebt:0, finalExp:15000, years:10, mortgage:0, eduPerChild:100000, spouseValue:0 },
+    assets:{ cash:0, investments:0, retirement:0, other:0, homeValue:0, includeRetirement:false },
+    insurance:{ has:"yes", policies:[], disability:false, health:true, ltc:false },
+    college:{ costPerYear:25000, years:4, kids:[] },
+    retirement:{ accounts:[], monthly:0, matchPct:0, retireAge:65, desiredMonthly:0, ssMonthly:0 },
+    estate:{ will:false, trust:false, poa:false, healthcare:false, beneficiaries:false, guardian:false },
+    goals:{ priorities:[], horizon:"1 year", monthlyBudget:0, notes:"" }
+  };
+}
+function sample(){
+  const S=blank();
+  Object.assign(S.profile,{name:"Ryan Mitchell (Example)",age:45,marital:"married",spouseName:"Priya",spouseAge:42,state:"AL",occupation:"Realtor",kids:[{name:"Ethan",age:6},{name:"Maya",age:4}]});
+  Object.assign(S.income,{primary:100000,spouse:100000,other:0,takeHome:12400});
+  Object.assign(S.expenses,{housing:2400,utilities:420,food:1300,transport:950,insurance:520,childcare:1100,debt:650,phone:250,family:300,fun:600,other:400});
+  Object.assign(S.flow,{saving:600,investing:300});
+  Object.assign(S.dime,{cc:8500,auto:26000,student:18000,otherDebt:0,finalExp:15000,years:12,mortgage:285000,eduPerChild:100000});
+  Object.assign(S.assets,{cash:18000,investments:25000,retirement:165000,other:0,homeValue:420000});
+  S.insurance.policies=[{owner:"primary",type:"Term",face:500000,premium:45,yearsLeft:8},{owner:"spouse",type:"Group/employer",face:100000,premium:0,yearsLeft:0}];
+  Object.assign(S.insurance,{has:"yes",disability:false,health:true,ltc:false});
+  S.college.kids=[{type:"529 plan",balance:12000,monthly:150},{type:"None yet",balance:0,monthly:0}];
+  Object.assign(S.retirement,{accounts:["SEP / Solo 401(k)","403(b)","Roth IRA"],monthly:900,matchPct:0,retireAge:65,desiredMonthly:9000,ssMonthly:4800});
+  Object.assign(S.estate,{will:true,trust:false,poa:false,healthcare:false,beneficiaries:true,guardian:false});
+  Object.assign(S.goals,{priorities:["Protect my family","Kids' college","Retire comfortably"],horizon:"2–3 years",monthlyBudget:1500});
+  return S;
+}
+function merge(base,o){ if(!o||typeof o!=="object") return base; for(const k in base){ if(o[k]===undefined) continue; if(Array.isArray(base[k])) base[k]=Array.isArray(o[k])?o[k]:base[k]; else if(base[k]&&typeof base[k]==="object") merge(base[k],o[k]); else base[k]=o[k]; } return base; }
+
+let S = blank();
+let step = 0;
+let view = "auth";
+let history = [];
+let account = { mode:null, name:"", ref:null, hist:null, localKey:null };
+let maxStep = 0;
+
+/* ---------- Calculations ---------- */
+function calc(){
+  const p=S.profile, inc=S.income, ex=S.expenses, d=S.dime, a=S.assets;
+  const married = p.marital==="married" || p.marital==="partner";
+  const kids = p.kids||[];
+  const age = +p.age||40;
+  const grossAnnual = (+inc.primary||0)+(married?(+inc.spouse||0):0)+(+inc.other||0);
+  const grossMonthly = grossAnnual/12;
+  const takeHome = (+inc.takeHome>0)? +inc.takeHome : grossMonthly*0.78;
+  const expenses = sum(Object.values(ex));
+  const saveInvest = (+S.flow.saving||0)+(+S.flow.investing||0);
+  const surplus = takeHome-expenses-saveInvest;
+  const retMonthly = +S.retirement.monthly||0;
+  const savingsRate = grossMonthly? (saveInvest+retMonthly)/grossMonthly : 0;
+  const dti = grossMonthly? ((+ex.housing||0)+(+ex.debt||0))/grossMonthly : 0;
+  const emMonths = expenses? (+a.cash||0)/expenses : 0;
+
+  // DIME
+  const D = (+d.cc||0)+(+d.auto||0)+(+d.student||0)+(+d.otherDebt||0)+(+d.finalExp||0);
+  const M = +d.mortgage||0;
+  const E = (+d.eduPerChild||0)*kids.length;
+  const yrs = +d.years||10;
+  const Ip = (+inc.primary||0)*yrs;
+  const Is = married? Math.max(+inc.spouse||0, +d.spouseValue||0)*yrs : 0;
+  const liquid = (+a.cash||0)+(+a.investments||0)+(+a.other||0)+(a.includeRetirement?(+a.retirement||0):0);
+  const pols = S.insurance.has==="yes"? (S.insurance.policies||[]) : [];
+  const coverP = sum(pols.filter(x=>x.owner!=="spouse").map(x=>x.face));
+  const coverS = sum(pols.filter(x=>x.owner==="spouse").map(x=>x.face));
+  const needP = D+Ip+M+E, needS = married? D+Is+M+E : 0;
+  const gapP = Math.max(0,needP-liquid-coverP);
+  const gapS = married? Math.max(0,needS-liquid-coverS) : 0;
+  const people = [{who:p.name?firstName(p.name):"You",role:"primary",age, D,I:Ip,M,E,need:needP,liquid,cover:coverP,gap:gapP}];
+  if(married) people.push({who:p.spouseName||"Spouse",role:"spouse",age:+p.spouseAge||age,D,I:Is,M,E,need:needS,liquid,cover:coverS,gap:gapS});
+  const totalNeed = sum(people.map(x=>x.need));
+  const protScore = totalNeed? clamp(sum(people.map(x=>Math.min(x.need,x.liquid+x.cover)))/totalNeed) : 1;
+  const groupOnly = pols.filter(x=>x.type==="Group/employer").length>0;
+  const shortTerm = pols.filter(x=>x.type==="Term" && kids.length && (+x.yearsLeft||0) < (18-Math.min(...kids.map(k=>+k.age||0)))).length>0;
+
+  // College
+  const ckids = kids.map((k,i)=>{
+    const c = S.college.kids[i]||{type:"None yet",balance:0,monthly:0};
+    const yTo = Math.max(0,18-(+k.age||0));
+    const target = (+S.college.costPerYear||0)*(+S.college.years||4)*Math.pow(1+EDU_INFL,yTo);
+    const proj = fv(+c.balance||0,+c.monthly||0,yTo);
+    const gap = Math.max(0,target-proj);
+    const need = yTo>0? gap/annuityFactor(yTo) : gap;
+    return { name:k.name||("Child "+(i+1)), age:+k.age||0, yTo, target, proj, gap, monthlyNeed:need, type:c.type, balance:+c.balance||0, monthly:+c.monthly||0 };
+  });
+  const eduTarget=sum(ckids.map(x=>x.target)), eduProj=sum(ckids.map(x=>Math.min(x.proj,x.target)));
+
+  // Retirement
+  const r=S.retirement;
+  const yRet = Math.max(0,(+r.retireAge||65)-age);
+  const match = (+r.matchPct||0)/100*(+inc.primary||0)/12;
+  const retProj = fv(+a.retirement||0, retMonthly+match, yRet);
+  const desired = (+r.desiredMonthly>0)? +r.desiredMonthly : takeHome*0.8;
+  const netMonthlyNeed = Math.max(0, desired-(+r.ssMonthly||0));
+  const retTarget = netMonthlyNeed*12*25*Math.pow(1+INFL,yRet);
+  const retGap = Math.max(0,retTarget-retProj);
+  const retExtra = yRet>0? retGap/annuityFactor(yRet) : retGap;
+  const retSeries=[]; for(let y=0;y<=yRet;y++) retSeries.push({age:age+y, v:fv(+a.retirement||0, retMonthly+match, y)});
+
+  // Estate
+  const estItems = [["will","Will"],["trust","Living trust"],["poa","Financial power of attorney"],["healthcare","Healthcare directive"],["beneficiaries","Beneficiaries up to date"]];
+  if(kids.length) estItems.push(["guardian","Guardian named for kids"]);
+  const estDone = estItems.filter(([k])=>S.estate[k]).length;
+
+  // Scores
+  const sc = {
+    cash: grossMonthly? (surplus<0? Math.min(30,clamp(savingsRate/0.2)*100) : clamp(savingsRate/0.2)*100) : 0,
+    emergency: clamp(emMonths/6)*100,
+    debt: grossMonthly? clamp((0.5-dti)/(0.5-0.28))*100 : 0,
+    protection: protScore*100,
+    education: kids.length? (eduTarget? clamp(eduProj/eduTarget)*100 : 100) : null,
+    retirement: retTarget? clamp(retProj/retTarget)*100 : 100,
+    estate: estDone/estItems.length*100
+  };
+  const W={cash:15,emergency:15,debt:10,protection:25,education:10,retirement:20,estate:5};
+  let ws=0,tot=0; for(const k in W){ if(sc[k]==null) continue; ws+=W[k]; tot+=W[k]*sc[k]; }
+  const score = Math.round(tot/ws);
+
+  // Action plan
+  const H = {"6 months":6,"1 year":12,"2–3 years":30,"5+ years":60}[S.goals.horizon]||12;
+  const actions=[];
+  const efTarget=6*expenses;
+  if(+a.cash < efTarget && expenses) actions.push({key:"ef",title:"Build emergency fund to 6 months",amt:(efTarget-(+a.cash||0))/Math.max(6,Math.min(24,H)),why:`You have ${emMonths.toFixed(1)} months saved; goal is ${$f(efTarget)}.`});
+  people.forEach(x=>{ if(x.gap>0) actions.push({key:"life-"+x.role,title:`Life insurance for ${x.who}`,amt:termEstimate(x.gap,x.age),why:`Coverage gap of ${$k(x.gap)}. Estimated 20-year term premium (illustrative).`,est:true}); });
+  if((+inc.primary||0)>0 && !S.insurance.disability) actions.push({key:"di",title:"Disability income protection",amt:grossAnnual*0.015/12,why:"Protects your paycheck if illness or injury stops you working. Rough estimate.",est:true});
+  if(+d.cc>0) actions.push({key:"cc",title:"Pay off credit cards",amt:(+d.cc)/Math.min(24,Math.max(6,H)),why:`${$f(d.cc)} at high interest. Extra payment above minimums.`});
+  if(retExtra>0) actions.push({key:"ret",title:"Increase retirement savings",amt:retExtra,why:`Projected shortfall of ${$k(retGap)} at age ${r.retireAge}.`});
+  const eduNeed=sum(ckids.map(x=>x.monthlyNeed));
+  if(eduNeed>0) actions.push({key:"edu",title:"Fund college savings",amt:eduNeed,why:`Gap of ${$k(sum(ckids.map(x=>x.gap)))} across ${ckids.length} ${ckids.length>1?"children":"child"}.`});
+  // priority ordering by stated goals
+  const order = ["ef","life-primary","life-spouse","di","cc","ret","edu"];
+  const pr=S.goals.priorities||[];
+  const boost = k => (pr.includes("Protect my family")&&k.startsWith("life")?-3:0)+(pr.includes("Pay off debt")&&k==="cc"?-2:0)+(pr.includes("Retire comfortably")&&k==="ret"?-2:0)+(pr.includes("Kids' college")&&k==="edu"?-2:0)+(pr.includes("Emergency savings")&&k==="ef"?-2:0);
+  actions.sort((x,y)=>(order.indexOf(x.key)+boost(x.key))-(order.indexOf(y.key)+boost(y.key)));
+  const budget = (+S.goals.monthlyBudget>0)? +S.goals.monthlyBudget : Math.max(0,surplus);
+  let left=budget; actions.forEach(x=>{ x.funded=Math.min(x.amt,Math.max(0,left)); left-=x.funded; });
+  const needTotal=sum(actions.map(x=>x.amt)), fundedTotal=sum(actions.map(x=>x.funded));
+
+  return {married,kids,age,grossAnnual,grossMonthly,takeHome,expenses,saveInvest,surplus,savingsRate,dti,emMonths,
+    D,M,E,yrs,liquid,people,totalNeed,protScore,groupOnly,shortTerm,ckids,eduTarget,eduProj,
+    yRet,match,retProj,retTarget,retGap,retExtra,retSeries,desired,estItems,estDone,sc,score,actions,budget,needTotal,fundedTotal,H,efTarget};
+}
+function termEstimate(gap,age){ const rate = age<30?0.035: age<40?0.05: age<50?0.11: age<60?0.28: 0.75; return gap/1000*rate; }
+function firstName(n){ return String(n).replace(/\(.*\)/,"").trim().split(/\s+/)[0]||"You"; }
+function status(v){ if(v==null) return ["na","Not applicable"]; if(v>=80) return ["good","Strong"]; if(v>=50) return ["warn","Needs attention"]; return ["bad","Priority"]; }
+function grade(s){ if(s>=85) return "Excellent"; if(s>=70) return "Good"; if(s>=50) return "Fair"; return "Needs work"; }
+
+/* ---------- Path helpers ---------- */
+function getP(path){ return path.split(".").reduce((o,k)=>o?.[k],S); }
+function setP(path,val){ const ks=path.split("."); let o=S; for(let i=0;i<ks.length-1;i++){ o=o[ks[i]]; } o[ks.at(-1)]=val; }
+const fid = path => "f-"+path.replace(/\./g,"-");
+
+/* ---------- Field builders ---------- */
+function money(path,label,hint="",ph="0"){ const v=getP(path); return `<label class="field" for="${fid(path)}"><span class="lbl">${label}</span><div class="inwrap"><span class="pre">$</span><input class="n" id="${fid(path)}" type="text" inputmode="decimal" data-path="${path}" data-kind="num" value="${v?esc(v):""}" placeholder="${ph}"></div>${hint?`<span class="hint">${hint}</span>`:""}</label>`; }
+function num(path,label,suf="",hint=""){ const v=getP(path); return `<label class="field" for="${fid(path)}"><span class="lbl">${label}</span><div class="inwrap"><input class="n" id="${fid(path)}" type="text" inputmode="decimal" data-path="${path}" data-kind="num" value="${v!==""&&v!=null&&v!==0?esc(v):""}" placeholder="0">${suf?`<span class="suf">${suf}</span>`:""}</div>${hint?`<span class="hint">${hint}</span>`:""}</label>`; }
+function text(path,label,ph=""){ return `<label class="field" for="${fid(path)}"><span class="lbl">${label}</span><div class="inwrap"><input id="${fid(path)}" type="text" data-path="${path}" value="${esc(getP(path))}" placeholder="${esc(ph)}"></div></label>`; }
+function select(path,label,opts,rerender=false){ const v=getP(path); return `<label class="field" for="${fid(path)}"><span class="lbl">${label}</span><div class="inwrap"><select id="${fid(path)}" data-path="${path}" ${rerender?"data-rerender":""}>${opts.map(o=>{const [val,t]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}" ${String(v)===String(val)?"selected":""}>${esc(t)}</option>`}).join("")}</select></div></label>`; }
+function toggle(path,title,sub="",rerender=false){ return `<label class="toggle" for="${fid(path)}"><input type="checkbox" id="${fid(path)}" data-path="${path}" data-kind="bool" ${getP(path)?"checked":""} ${rerender?"data-rerender":""}><span><span class="t">${title}</span>${sub?`<br><span class="s">${sub}</span>`:""}</span></label>`; }
+function chips(path,opts){ const v=getP(path)||[]; return `<div class="chips">${opts.map(o=>`<button type="button" class="chip" data-chip="${path}" data-val="${esc(o)}" aria-pressed="${v.includes(o)}">${esc(o)}</button>`).join("")}</div>`; }
+
+/* ---------- Steps ---------- */
+const STEPS = [
+  {t:"Your family", phase:"Snapshot"},
+  {t:"Income & budget", phase:"Snapshot"},
+  {t:"DIME analysis", phase:"Deep dive"},
+  {t:"Assets", phase:"Deep dive"},
+  {t:"Insurance", phase:"Deep dive"},
+  {t:"College planning", phase:"Deep dive"},
+  {t:"Retirement", phase:"Deep dive"},
+  {t:"Estate planning", phase:"Deep dive"},
+  {t:"Goals & budget", phase:"Your plan"}
+];
+
+function stepBody(i){
+  const c=calc(), p=S.profile;
+  switch(i){
+  case 0: return head("Tell us about your family","We'll tailor every number to the people you're planning for.")+`
+    <div class="sub"><h3>You</h3><div class="grid g3">${text("profile.name","Full name","e.g. Jordan Smith")}${num("profile.age","Age","yrs")}${text("profile.occupation","Occupation")}</div>
+    <div class="grid g3">${select("profile.marital","Marital status",[["married","Married"],["partner","Domestic partner"],["single","Single"],["divorced","Divorced"],["widowed","Widowed"]],true)}${text("profile.state","State","e.g. AL")}</div></div>
+    ${c.married?`<div class="sub"><h3>Spouse / partner</h3><div class="grid g3">${text("profile.spouseName","Name")}${num("profile.spouseAge","Age","yrs")}</div></div>`:""}
+    <div class="sub"><h3>Children <span class="badge">${p.kids.length}</span></h3>
+      ${p.kids.map((k,j)=>`<div class="row-card"><div class="rh">Child ${j+1}<button class="btn-link" data-act="delkid" data-i="${j}">Remove</button></div><div class="grid g2">${text(`profile.kids.${j}.name`,"Name")}${num(`profile.kids.${j}.age`,"Age","yrs")}</div></div>`).join("")}
+      <div><button class="btn btn-ghost btn-sm" data-act="addkid">+ Add child</button></div>
+    </div>`;
+  case 1: return head("Income & monthly budget","Your money in and money out. Estimates are fine; you can refine later.")+`
+    <div class="sub"><h3>Annual household income (before tax)</h3><div class="grid g3">${money("income.primary","Your income")}${c.married?money("income.spouse","Spouse income"):""}${money("income.other","Other income","Rental, side business, etc.")}</div>
+    <div class="grid g3">${money("income.takeHome","Monthly take-home pay","Leave blank and we'll estimate ~78% of gross.")}</div></div>
+    <div class="sub"><h3>Basic monthly expenses</h3><div class="grid g3">
+      ${money("expenses.housing","Rent / mortgage")}${money("expenses.utilities","Utilities")}${money("expenses.food","Groceries & dining")}
+      ${money("expenses.transport","Car & transportation")}${money("expenses.insurance","Insurance premiums")}${money("expenses.childcare","Childcare & school")}
+      ${money("expenses.debt","Debt payments","Cards, auto, student loans")}${money("expenses.phone","Phone, internet & subscriptions")}${money("expenses.family","Support for parents / family")}
+      ${money("expenses.fun","Entertainment & travel")}${money("expenses.other","Everything else")}
+    </div></div>
+    <div class="sub"><h3>What you set aside each month</h3><div class="grid g3">${money("flow.saving","Savings")}${money("flow.investing","Investing (outside retirement)")}</div></div>
+    <div id="snapshot">${snapshotCallout(c)}</div>`;
+  case 2: return head("DIME needs analysis","DIME adds up what your family would need if an income stopped: Debt, Income replacement, Mortgage and Education.")+`
+    <div class="sub"><h3><span class="badge">D</span> Debt & final expenses</h3><div class="grid g3">${money("dime.cc","Credit cards")}${money("dime.auto","Auto loans")}${money("dime.student","Student loans")}${money("dime.otherDebt","Other debts")}${money("dime.finalExp","Final expenses","Funeral & settling costs")}</div></div>
+    <div class="sub"><h3><span class="badge">I</span> Income replacement</h3><div class="grid g3">${num("dime.years","Years to replace income","yrs","10 is a common minimum; many use years until youngest turns 22.")}${c.married?money("dime.spouseValue","Value of stay-at-home work / yr","Optional. Use if a spouse earns little but provides childcare & home care."):""}</div></div>
+    <div class="sub"><h3><span class="badge">M</span> Mortgage</h3><div class="grid g3">${money("dime.mortgage","Mortgage balance remaining")}</div></div>
+    <div class="sub"><h3><span class="badge">E</span> Education</h3><div class="grid g3">${money("dime.eduPerChild","Education fund per child","Today's dollars")}</div><p class="hint">${c.kids.length} ${c.kids.length===1?"child":"children"} listed on your family page.</p></div>
+    <div id="dimebox">${dimeCallout(c)}</div>`;
+  case 3: return head("What you own","Liquid assets can be subtracted from your DIME need. Your home stays out by default because your family needs a place to live.")+`
+    <div class="grid g2">${money("assets.cash","Cash, checking & savings")}${money("assets.investments","Brokerage & investments")}${money("assets.retirement","Retirement accounts total","401(k), IRA, 403(b), etc.")}${money("assets.other","Other liquid assets")}${money("assets.homeValue","Home market value","For your net worth only")}</div>
+    ${toggle("assets.includeRetirement","Count retirement accounts toward family protection","Withdrawals may be taxed and penalized, so most plans leave this off.")}
+    <div id="assetbox">${assetCallout(c)}</div>`;
+  case 4: { const pols=S.insurance.policies; return head("Insurance you have today","Life insurance fills the gap between your DIME need and your assets.")+`
+    <div class="sub"><h3>Do you have life insurance?</h3><div class="seg" role="group">${["yes","no"].map(v=>`<button type="button" data-seg="insurance.has" data-val="${v}" aria-pressed="${S.insurance.has===v}">${v==="yes"?"Yes":"No"}</button>`).join("")}</div></div>
+    ${S.insurance.has==="yes"?`<div class="sub"><h3>Policies <span class="badge">${pols.length}</span></h3>
+      ${pols.map((x,j)=>`<div class="row-card"><div class="rh">Policy ${j+1}<button class="btn-link" data-act="delpol" data-i="${j}">Remove</button></div><div class="grid g3">
+        ${select(`insurance.policies.${j}.owner`,"Insured",c.married?[["primary",firstName(p.name)||"Me"],["spouse",p.spouseName||"Spouse"]]:[["primary",firstName(p.name)||"Me"]])}
+        ${select(`insurance.policies.${j}.type`,"Type",["Term","Whole life","IUL","Universal life","Group/employer"])}
+        ${money(`insurance.policies.${j}.face`,"Death benefit")}
+        ${money(`insurance.policies.${j}.premium`,"Monthly premium")}
+        ${num(`insurance.policies.${j}.yearsLeft`,"Years left on term","yrs","Term policies only")}
+      </div></div>`).join("")}
+      <div><button class="btn btn-ghost btn-sm" data-act="addpol">+ Add policy</button></div></div>`:""}
+    <div class="sub"><h3>Other protection</h3><div class="grid g3">${toggle("insurance.disability","Disability income insurance")}${toggle("insurance.health","Health insurance")}${toggle("insurance.ltc","Long-term care coverage")}</div></div>
+    <div class="callout"><span>ⓘ</span><span><b>Term</b> covers a set number of years at the lowest cost. <b>Cash value</b> policies (whole life, IUL, universal life) last for life and build savings you can borrow against, with higher premiums.</span></div>`; }
+  case 5: return head("College planning","How each child's education savings is tracking toward their first year of college.")+`
+    ${c.kids.length?`<div class="grid g2">${money("college.costPerYear","Expected cost per year","Today's dollars. In-state public averages ~$25K with room & board.")}${num("college.years","Years of college","yrs")}</div>
+    ${c.kids.map((k,j)=>{ ensureCollege(j); return `<div class="row-card"><div class="rh">${esc(k.name||"Child "+(j+1))} · age ${k.age||0}<span class="hint">${Math.max(0,18-(+k.age||0))} years to college</span></div><div class="grid g3">
+      ${select(`college.kids.${j}.type`,"Savings plan",["529 plan","Coverdell ESA","UTMA/UGMA","IUL / cash value","Savings account","Other","None yet"])}
+      ${money(`college.kids.${j}.balance`,"Current balance")}${money(`college.kids.${j}.monthly`,"Monthly contribution")}</div></div>`}).join("")}`
+    :`<div class="callout"><span>ⓘ</span><span>No children listed, so college planning is skipped. Add children on the <button class="btn-link" data-go="0">family page</button> if this applies.</span></div>`}`;
+  case 6: return head("Retirement planning","Where your retirement savings are heading, and what you'll need.")+`
+    <div class="sub"><h3>Accounts you contribute to</h3>${chips("retirement.accounts",["401(k)","403(b)","Traditional IRA","Roth IRA","SEP / Solo 401(k)","Pension","Annuity","IUL","Brokerage"])}</div>
+    <div class="grid g3">${money("retirement.monthly","Your monthly contribution")}${num("retirement.matchPct","Employer match","% of pay")}${num("retirement.retireAge","Target retirement age","age")}
+    ${money("retirement.desiredMonthly","Desired monthly income in retirement","Today's dollars. Blank = 80% of take-home.")}${money("retirement.ssMonthly","Expected Social Security / pension","Monthly, today's dollars. See ssa.gov/myaccount.")}</div>
+    <p class="hint">Current retirement balance: <b class="num">${$f(S.assets.retirement)}</b> (from Assets).</p>
+    <div id="retbox">${retCallout(c)}</div>`;
+  case 7: return head("Have you finished your estate planning?","These documents make sure your wishes are followed and your family can act quickly.")+`
+    <div class="grid g2">${c.estItems.map(([k,t])=>toggle("estate."+k,t,estateHint(k))).join("")}</div>`;
+  case 8: return head("Your goals, budget & timeline","This shapes the order of your plan and what's affordable right now.")+`
+    <div class="sub"><h3>What matters most?</h3>${chips("goals.priorities",["Protect my family","Pay off debt","Emergency savings","Kids' college","Retire comfortably","Buy a home","Build wealth","Leave a legacy"])}</div>
+    <div class="grid g2">${select("goals.horizon","When do you want to close your gaps?",["6 months","1 year","2–3 years","5+ years"])}
+    ${money("goals.monthlyBudget","Monthly amount you can put toward your plan",`Your current monthly surplus is ${$f(c.surplus)}. Leave blank to use it.`)}</div>
+    <label class="field" for="f-goals-notes"><span class="lbl">Anything else we should know?</span><div class="inwrap"><input id="f-goals-notes" data-path="goals.notes" value="${esc(S.goals.notes)}" placeholder="e.g. planning a second child, changing jobs next year"></div></label>`;
+  }
+}
+function head(t,d){ return `<div class="panel-head"><span class="eyebrow">Step ${step+1} of ${STEPS.length} · ${STEPS[step].phase}</span><h2>${t}</h2><p>${d}</p></div>`; }
+function ensureCollege(j){ while(S.college.kids.length<=j) S.college.kids.push({type:"None yet",balance:0,monthly:0}); }
+function estateHint(k){ return {will:"Directs who receives your assets.",trust:"Avoids probate and controls timing of gifts.",poa:"Someone you trust handles finances if you can't.",healthcare:"Your medical wishes in writing.",beneficiaries:"On life insurance and retirement accounts.",guardian:"Who raises your children."}[k]; }
+
+function snapshotCallout(c){
+  const tone = c.surplus<0?"warm":"";
+  return `<div class="callout ${tone}"><span>${c.surplus<0?"!":"✓"}</span><span><b>Quick snapshot:</b> you take home about <b class="num">${$f(c.takeHome)}</b>/month, spend <b class="num">${$f(c.expenses)}</b>, and set aside <b class="num">${$f(c.saveInvest)}</b>. ${c.surplus>=0?`That leaves <b class="num">${$f(c.surplus)}</b> unassigned each month that could work for your future.`:`You're spending <b class="num">${$f(-c.surplus)}</b> more than you bring in. Your plan will start by fixing cash flow.`} Your savings rate is <b>${pct((c.saveInvest)/(c.grossMonthly||1))}</b> of gross income (goal: 15–20%).</span></div>`;
+}
+function dimeCallout(c){ return `<div class="callout"><span>Σ</span><span><b>DIME total:</b> ${c.people.map(x=>`${esc(x.who)} <b class="num">${$f(x.need)}</b>`).join(" · ")}. Next, we'll subtract what you already own.</span></div>`; }
+function assetCallout(c){ return `<div class="callout"><span>−</span><span><b>Assets that offset your need:</b> <b class="num">${$f(c.liquid)}</b>. ${c.people.map(x=>`${esc(x.who)}'s remaining need before insurance: <b class="num">${$f(Math.max(0,x.need-x.liquid))}</b>`).join(" · ")}.</span></div>`; }
+function retCallout(c){ return `<div class="callout ${c.retGap>0?"warm":""}"><span>↗</span><span>At this pace you'd have about <b class="num">${$k(c.retProj)}</b> at age ${S.retirement.retireAge}, versus about <b class="num">${$k(c.retTarget)}</b> needed. ${c.retGap>0?`Closing the gap takes roughly <b class="num">${$f(c.retExtra)}</b>/month more.`:"You're on track."}</span></div>`; }
+
+
+function recs(c){
+  const R=[];
+  if(c.surplus<0) R.push(["bad","Fix monthly cash flow first",`You're short ${$f(-c.surplus)} a month. Trim the two largest flexible categories (dining, entertainment, subscriptions) and pause new spending on credit.`]);
+  c.people.forEach(x=>{ if(x.gap>0) R.push(["bad",`Close ${x.who}'s ${$k(x.gap)} life insurance gap`,`If ${x.who}'s income stopped, your family would be short ${$f(x.gap)}. A ${x.age<50?"20- or 30-year term":"term or guaranteed"} policy is usually the most affordable way to cover it; estimated ~${$f(termEstimate(x.gap,x.age))}/month for a healthy non-smoker.`]); });
+  if(c.groupOnly) R.push(["warn","Don't rely on employer life insurance alone","Group coverage usually ends when you leave or lose the job, and is often only 1–2× salary. Own a policy that goes where you go."]);
+  if(c.shortTerm) R.push(["warn","A term policy ends before your kids are grown","Consider a longer term or adding coverage so protection lasts until your youngest is independent."]);
+  if(c.emMonths<3) R.push(["bad","Build a starter emergency fund",`Aim for 3 months (${$f(3*c.expenses)}) first, then 6. Keep it in a high-yield savings account separate from checking.`]);
+  else if(c.emMonths<6) R.push(["warn","Grow your emergency fund to 6 months",`You have ${c.emMonths.toFixed(1)} months. Target ${$f(c.efTarget)}.`]);
+  if(+S.dime.cc>0) R.push(["warn","Eliminate credit card balances",`${$f(S.dime.cc)} in card debt likely costs 20%+ a year. Pay the highest rate first (avalanche) or smallest balance first (snowball) while paying minimums on the rest.`]);
+  if(c.dti>0.36) R.push(["warn","Lower your debt-to-income ratio",`Housing and debt take ${pct(c.dti)} of gross income; lenders like 36% or less.`]);
+  if(!S.insurance.disability && c.grossAnnual>0) R.push(["warn","Protect your paycheck with disability coverage","You're more likely to miss work from illness or injury than to die young. Disability insurance typically replaces 60% of income."]);
+  if(c.match>0 && +S.retirement.monthly < c.match) R.push(["warn","Capture your full employer match","Contribute at least enough to get the full match. It's an instant 50–100% return."]);
+  if(c.retGap>0) R.push([c.sc.retirement<50?"bad":"warn","Increase retirement contributions",`Add about ${$f(c.retExtra)}/month, or raise contributions 1% each year. ${c.yRet<12?"With fewer than 12 years to go, consider catch-up contributions.":"Time is on your side, so small increases now grow a lot."}`]);
+  c.ckids.forEach(k=>{ if(k.gap>0) R.push(["warn",`College fund for ${k.name}`,`Projected ${$k(k.proj)} vs ${$k(k.target)} needed in ${k.yTo} years. ${k.type==="None yet"?"Open a 529 plan; many states, including Alabama, offer a state tax deduction.":`Add about ${$f(k.monthlyNeed)}/month to the ${k.type}.`}`]); });
+  const missing=c.estItems.filter(([k])=>!S.estate[k]).map(([,t])=>t.toLowerCase());
+  if(missing.length) R.push([missing.length>3?"bad":"warn","Complete your estate documents",`Still needed: ${missing.join(", ")}.${c.kids.length&&!S.estate.guardian?" Naming a guardian is the most important step for parents.":""}`]);
+  return R;
+}
+function wins(c){
+  const W=[];
+  if(c.surplus>0) W.push(`You spend less than you earn, with ${$f(c.surplus)} free each month.`);
+  if(c.savingsRate>=0.1) W.push(`You save ${pct(c.savingsRate)} of your income.`);
+  if(c.emMonths>=3) W.push(`You have ${c.emMonths.toFixed(1)} months of expenses in savings.`);
+  if(c.people.some(x=>x.cover>0)) W.push("You already own life insurance, a strong foundation to build on.");
+  if(+S.assets.retirement>0) W.push(`You've built ${$f(S.assets.retirement)} for retirement.`);
+  if(c.ckids.some(k=>k.balance>0||k.monthly>0)) W.push("You've started saving for your children's education.");
+  if(S.estate.will) W.push("You have a will in place.");
+  if(c.dti<=0.28 && c.grossAnnual) W.push("Your debt load is in a healthy range.");
+  if(!W.length) W.push("You took the most important step: you now know exactly where you stand.");
+  return W;
+}
+function timeline(c){
+  const d30=[],d90=[],d12=[];
+  if(c.surplus<0) d30.push("Cut monthly spending to get back to break-even");
+  c.actions.forEach(a=>{
+    if(a.key.startsWith("life")) d30.push(`Get life insurance quotes: ${a.title.replace("Life insurance for ","")}`);
+    if(a.key==="di") d90.push("Add disability income coverage");
+    if(a.key==="ef") d30.push(`Set up an automatic ${$f(a.funded||a.amt)}/month transfer to savings`);
+    if(a.key==="cc") d90.push(`Pay an extra ${$f(a.funded||a.amt)}/month on credit cards`);
+    if(a.key==="ret") d90.push("Raise retirement contributions"+(c.match>0?" to at least the full match":""));
+    if(a.key==="edu") d12.push("Open or increase 529 contributions for each child");
+  });
+  if(!S.estate.will || (c.kids.length&&!S.estate.guardian)) d30.push("Book an estate attorney; name a guardian");
+  if(!S.estate.beneficiaries) d30.push("Review beneficiaries on all policies & accounts");
+  if(!S.estate.poa||!S.estate.healthcare) d90.push("Sign power of attorney & healthcare directive");
+  d12.push("Re-run your MoneyManager checkup and compare your score");
+  if(c.emMonths<6) d12.push("Reach a full 6-month emergency fund");
+  if(!d90.length) d90.push("Review budget and automate any new savings");
+  return [d30,d90,d12];
+}
+
+
+/* ---------- Spreadsheet model (shared by grid view and Excel export) ---------- */
+const $c=v=>({v:Math.round(v||0),t:"$"}), $p=v=>({v:isFinite(v)?v:0,t:"%"}), $n=(v,t="n")=>({v:+v||0,t}), $b=v=>({v,b:true}), $h=v=>({v,h:true});
+function sheetData(){
+  const c=calc(), nw=netWorth(), P=c.people;
+  const sheets=[];
+  sheets.push({name:"Summary",cols:[30,18,14,18],chart:()=>`<h4>Health by area</h4>${scoreBars(c)}`,rows:[
+    [$b(`${famName()}: Financial Health Checkup`)],[`Prepared ${new Date().toLocaleDateString("en-US")}`],[],
+    [$h("Area"),$h("Result"),$h("Score"),$h("Status")],
+    ...AREAS.map(([k,l])=>{ const v=c.sc[k]; const res={cash:$p(c.savingsRate),emergency:$n(c.emMonths,"1"),debt:$p(c.dti),protection:$p(c.protScore),education:c.kids.length?$p(c.eduTarget?c.eduProj/c.eduTarget:1):"n/a",retirement:$p(c.retTarget?Math.min(1,c.retProj/c.retTarget):1),estate:`${c.estDone} of ${c.estItems.length}`}[k];
+      return [l,res,v==null?"n/a":$n(Math.round(v)),status(v)[1]]; }),
+    [$b("Overall health score"),"", $b(c.score), $b(grade(c.score))],[],
+    [$h("Key number"),$h("Amount")],
+    ["Household income (annual)",$c(c.grossAnnual)],["Monthly take-home",$c(c.takeHome)],["Monthly expenses",$c(c.expenses)],["Monthly surplus",$c(c.surplus)],
+    ["Net worth",$c(nw.net)],["Total protection gap",$c(sum(P.map(x=>x.gap)))],["Retirement gap",$c(c.retGap)],["College gap",$c(sum(c.ckids.map(k=>k.gap)))]]});
+  const segs=cashSegs(c), th=c.takeHome||1;
+  const e=S.expenses, exRows=[["Rent / mortgage",e.housing],["Utilities",e.utilities],["Groceries & dining",e.food],["Car & transportation",e.transport],["Insurance premiums",e.insurance],["Childcare & school",e.childcare],["Debt payments",e.debt],["Phone, internet & subscriptions",e.phone],["Support for parents / family",e.family],["Entertainment & travel",e.fun],["Everything else",e.other]];
+  sheets.push({name:"Cash Flow",cols:[32,14,14,16],chart:()=>`<h4>Where your money goes</h4>${cashDonut(c)}`,rows:[
+    [$h("Category"),$h("Monthly"),$h("Annual"),$h("% of take-home")],
+    ...exRows.map(([l,v])=>[l,$c(v),$c(v*12),$p((+v||0)/th)]),
+    [$b("Total expenses"),$c(c.expenses),$c(c.expenses*12),$p(c.expenses/th)],
+    ["Savings",$c(S.flow.saving),$c(S.flow.saving*12),$p(S.flow.saving/th)],["Investing",$c(S.flow.investing),$c(S.flow.investing*12),$p(S.flow.investing/th)],
+    [$b("Monthly surplus"),$c(c.surplus),$c(c.surplus*12),$p(c.surplus/th)],[],
+    ["Gross household income",$c(c.grossMonthly),$c(c.grossAnnual)],["Take-home pay",$c(c.takeHome),$c(c.takeHome*12)],
+    ["Savings rate (incl. retirement)",$p(c.savingsRate)],["Debt-to-income",$p(c.dti)],["Emergency fund (months)",$n(c.emMonths,"1")]]});
+  sheets.push({name:"DIME",cols:[34,16,16],chart:()=>`<h4>DIME need vs. what's covered</h4>${dimeChart(c)}`,rows:[
+    [$h("Component"),...P.map(x=>$h(x.who))],
+    ["D: Debt + final expenses",...P.map(x=>$c(x.D))],["I: Income replacement",...P.map(x=>$c(x.I))],["M: Mortgage",...P.map(x=>$c(x.M))],["E: Education",...P.map(x=>$c(x.E))],
+    [$b("Total DIME need"),...P.map(x=>$c(x.need))],["Less liquid assets",...P.map(x=>$c(-Math.min(x.need,x.liquid)))],["Less existing insurance",...P.map(x=>$c(-x.cover))],
+    [$b("Protection gap"),...P.map(x=>$c(x.gap))],["Est. 20-yr term premium / mo*",...P.map(x=>$c(x.gap?termEstimate(x.gap,x.age):0))],[],
+    ["*Rough illustrative estimate for a healthy non-smoker."]]});
+  sheets.push({name:"Net Worth",cols:[28,16],chart:()=>`<h4>What you own vs. owe</h4>${netWorthBars(c)}`,rows:[
+    [$h("Assets"),$h("Value")],...nw.aList.map(([l,v])=>[l,$c(v)]),[$b("Total assets"),$c(nw.assets)],[],
+    [$h("Liabilities"),$h("Balance")],...nw.dList.map(([l,v])=>[l,$c(v)]),[$b("Total liabilities"),$c(nw.debts)],[],[$b("Net worth"),$c(nw.net)]]});
+  sheets.push({name:"College",cols:[16,18,12,16,16,16,16],chart:()=>`<h4>College funding by child</h4>${collegeBars(c)}`,rows:[
+    [$h("Child"),$h("Plan"),$h("Years to go"),$h("Target cost"),$h("Projected"),$h("Gap"),$h("Extra / month")],
+    ...c.ckids.map(k=>[k.name,k.type,$n(k.yTo),$c(k.target),$c(k.proj),$c(k.gap),$c(k.monthlyNeed)]),
+    [$b("Total"),"","",$c(c.eduTarget),$c(sum(c.ckids.map(k=>k.proj))),$c(sum(c.ckids.map(k=>k.gap))),$c(sum(c.ckids.map(k=>k.monthlyNeed)))],[],
+    [`Assumes ${$f(S.college.costPerYear)}/yr for ${S.college.years} yrs, costs rising ${EDU_INFL*100}%/yr, savings growing ${RATE*100}%/yr.`]]});
+  const yrs=c.retSeries.filter((p,i)=>i%5===0||i===c.retSeries.length-1);
+  sheets.push({name:"Retirement",cols:[30,18],chart:()=>`<h4>Projected retirement savings</h4>${retChart(c)}`,rows:[
+    ["Current balance",$c(S.assets.retirement)],["Monthly contribution",$c(S.retirement.monthly)],["Employer match / month",$c(c.match)],["Target retirement age",$n(S.retirement.retireAge)],
+    ["Desired monthly income (today's $)",$c(c.desired)],["Social Security + pension / month",$c(S.retirement.ssMonthly)],[],
+    [$b("Projected savings at retirement"),$c(c.retProj)],[$b("Savings needed"),$c(c.retTarget)],[$b("Retirement gap"),$c(c.retGap)],["Extra monthly needed",$c(c.retExtra)],[],
+    [$h("Age"),$h("Projected balance")],...yrs.map(p=>[$n(p.age),$c(p.v)])]});
+  sheets.push({name:"Action Plan",cols:[36,15,15,15,15],chart:()=>`<h4>Plan funding</h4>${planChart(c)}`,rows:[
+    ["Monthly plan budget",$c(c.budget)],["Goal timeline",S.goals.horizon],[],
+    [$h("Priority"),$h("Needs / mo"),$h("Funded"),$h("Remaining"),$h("Status")],
+    ...c.actions.map((a,i)=>[`${i+1}. ${a.title}${a.est?"*":""}`,$c(a.amt),$c(a.funded),$c(a.amt-a.funded),a.funded>=a.amt-1?"Funded":a.funded>0?"Partly funded":"Next phase"]),
+    [$b("Total"),$c(c.needTotal),$c(c.fundedTotal),$c(c.needTotal-c.fundedTotal),$p(c.needTotal?c.fundedTotal/c.needTotal:1)],[],
+    [$h("When"),$h("Action")],...timeline(c).flatMap((l,i)=>l.map(x=>[["First 30 days","Within 90 days","Within 12 months"][i],x]))]});
+  sheets.push({name:"Your Answers",cols:[38,22],chart:()=>`<h4>Estate checklist</h4><div style="display:grid;gap:8px">${c.estItems.map(([k,t])=>`<div style="display:flex;gap:10px;align-items:center"><span class="pill ${S.estate[k]?"good":"bad"}">${S.estate[k]?"Done":"To do"}</span>${t}</div>`).join("")}</div>`,rows:[
+    [$h("Family"),""],["Name",S.profile.name],["Age",$n(S.profile.age)],["Spouse",S.profile.spouseName],["Spouse age",$n(S.profile.spouseAge)],...S.profile.kids.map((k,i)=>[`Child ${i+1}`,`${k.name||""}, age ${k.age||0}`]),[],
+    [$h("Insurance"),""],...S.insurance.policies.map(p=>[`${p.owner==="spouse"?(S.profile.spouseName||"Spouse"):firstName(S.profile.name)}: ${p.type}`,$c(p.face)]),["Disability coverage",S.insurance.disability?"Yes":"No"],["Health insurance",S.insurance.health?"Yes":"No"],[],
+    [$h("Retirement accounts"),(S.retirement.accounts||[]).join(", ")],[],
+    [$h("Estate"),""],...c.estItems.map(([k,t])=>[t,S.estate[k]?"Done":"To do"]),[],
+    [$h("Goals"),""],["Priorities",(S.goals.priorities||[]).join(", ")],["Timeline",S.goals.horizon]]});
+  return sheets;
+}
+function cellText(x){ if(x==null||x==="") return ""; if(typeof x!=="object") return esc(x); const v=x.v; if(typeof v!=="number") return esc(v);
+  return x.t==="$"? $f(v) : x.t==="%"? (Math.round(v*1000)/10)+"%" : x.t==="1"? v.toFixed(1) : String(v); }
+
+let xlsxLib=null;
+function loadXLSX(){ if(window.XLSX) return Promise.resolve(window.XLSX); if(xlsxLib) return xlsxLib;
+  xlsxLib=new Promise((res,rej)=>{ const sc=document.createElement("script"); sc.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"; sc.onload=()=>res(window.XLSX); sc.onerror=()=>{ xlsxLib=null; rej(new Error("load")); }; document.head.appendChild(sc); }); return xlsxLib; }
+async function exportXlsx(btn){
+  if(!account.dl){ toast("Downloads aren't available in this view"); return; }
+  const old=btn.textContent; btn.disabled=true; btn.textContent="Preparing…";
+  try{
+    const X=await loadXLSX(); const wb=X.utils.book_new();
+    for(const sh of sheetData()){
+      const aoa=sh.rows.map(r=>r.map(x=>x==null?null:(typeof x==="object"?x.v:x)));
+      const ws=X.utils.aoa_to_sheet(aoa);
+      sh.rows.forEach((r,ri)=>r.forEach((x,ci)=>{ if(x&&typeof x==="object"&&typeof x.v==="number"){ const a=X.utils.encode_cell({r:ri,c:ci}); if(ws[a]) ws[a].z= x.t==="$"?'$#,##0;($#,##0);"-"':x.t==="%"?"0.0%":x.t==="1"?"0.0":"0"; } }));
+      ws["!cols"]=sh.cols.map(w=>({wch:w})); X.utils.book_append_sheet(wb,ws,sh.name.slice(0,31));
+    }
+    const out=X.write(wb,{bookType:"xlsx",type:"array"});
+    await account.dl.save({filename:`MoneyManager ${famName()} Checkup.xlsx`,data:new Blob([out])});
+    toast("Excel file saved");
+  }catch(e){ if(e?.code==="declined"){} else if(e?.message==="load") toast("Couldn't load the Excel tool. Check your connection and try again."); else if(e?.code==="rate_limited") toast("A save prompt is already open."); else toast("Couldn't create the Excel file. Try again."); }
+  btn.disabled=false; btn.textContent=old;
+}
+
+
+/* ================= Website auth & storage (Supabase) ================= */
+const CFG = window.MM_CONFIG || {};
+const CFG_OK = /^https:\/\//.test(CFG.supabaseUrl||"") && !!CFG.supabaseAnonKey && !/YOUR-/.test((CFG.supabaseUrl||"")+(CFG.supabaseAnonKey||""));
+const DEMO = !CFG_OK;
+/* Demo mode: a stand-in for Supabase that keeps accounts and plans in this browser (localStorage)
+   so every screen can be tried before the real database is connected. No emails are sent;
+   the 6-digit code is shown on screen instead. Real mode never uses this. */
+function demoClient(){
+  const K="mm-demo:"; const get=(k,d)=>{ try{ return JSON.parse(localStorage.getItem(K+k))??d; }catch(e){ return d; } }; const put=(k,v)=>{ try{ localStorage.setItem(K+k,JSON.stringify(v)); }catch(e){} };
+  const users=()=>get("users",{}), saveUsers=u=>put("users",u);
+  const newCode=email=>{ const c=String(Math.floor(100000+Math.random()*900000)); const codes=get("codes",{}); codes[email]={c,at:Date.now()}; put("codes",codes); window.__demoCode=c; return c; };
+  const checkCode=(email,t)=>{ const x=get("codes",{})[email]; return x && x.c===t && Date.now()-x.at<3600e3; };
+  const sess=()=>get("session",null), mk=u=>({user:{id:u.id,email:u.email,user_metadata:{full_name:u.name}}});
+  const auth={
+    async getSession(){ return {data:{session:sess()}}; }, onAuthStateChange(){},
+    async signUp({email,password,options}){ const u=users(); if(u[email]?.confirmed) return {data:{user:{identities:[]}},error:null}; u[email]={id:"demo-"+Math.random().toString(36).slice(2,10),email,password,name:options?.data?.full_name||"",confirmed:false}; saveUsers(u); newCode(email); return {data:{user:{identities:[{}]},session:null},error:null}; },
+    async resend({email}){ newCode(email); return {error:null}; },
+    async verifyOtp({email,token}){ const u=users(); if(!u[email]||!checkCode(email,token)) return {data:{},error:{message:"Token has expired or is invalid"}}; u[email].confirmed=true; saveUsers(u); const s=mk(u[email]); put("session",s); return {data:{session:s},error:null}; },
+    async signInWithPassword({email,password}){ const x=users()[email]; if(!x||x.password!==password) return {data:{},error:{message:"Invalid login credentials"}}; if(!x.confirmed) return {data:{},error:{message:"Email not confirmed"}}; const s=mk(x); put("session",s); return {data:{session:s},error:null}; },
+    async resetPasswordForEmail(email){ if(users()[email]) newCode(email); else window.__demoCode=null; return {error:null}; },
+    async updateUser({password}){ const u=users(), s=sess(); const e=s&&Object.keys(u).find(k=>u[k].id===s.user.id); if(e){ u[e].password=password; saveUsers(u); } return {error:null}; },
+    async signOut(){ put("session",null); return {error:null}; }
+  };
+  function from(t){ let f=null, ins=null; const rows=()=>get("t:"+t,[]);
+    const api={ upsert(r){ const a=rows(); const i=a.findIndex(x=>x.user_id===r.user_id); i>=0?a[i]=r:a.push(r); put("t:"+t,a); return Promise.resolve({error:null}); },
+      insert(r){ ins={...r,at:new Date().toISOString()}; const a=rows(); a.push(ins); put("t:"+t,a); return api; },
+      select(){ return api; }, eq(k,v){ f=[k,v]; return api; }, order(){ return api; }, limit(){ return api; },
+      maybeSingle(){ return Promise.resolve({data:rows().find(x=>x[f[0]]===f[1])||null,error:null}); },
+      single(){ return Promise.resolve({data:ins,error:null}); },
+      then(res,rej){ return Promise.resolve({data:rows().filter(x=>!f||x[f[0]]===f[1]).sort((a,b)=>String(b.at).localeCompare(String(a.at))).slice(0,8),error:null}).then(res,rej); } };
+    return api; }
+  return {auth,from};
+}
+const sb = DEMO ? demoClient() : (window.supabase ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null);
+let authView="login", authEmail="", authFlow="signup", resendAt=0, resendTimer=null;
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function otpBoxes(){ return `<div class="otp" role="group" aria-label="6-digit code">${Array.from({length:6},(_,i)=>`<input id="otp-${i}" inputmode="numeric" pattern="[0-9]*" autocomplete="${i===0?"one-time-code":"off"}" maxlength="1" aria-label="Digit ${i+1}" data-otpi="${i}">`).join("")}</div>`; }
+function otpValue(){ return [...document.querySelectorAll(".otp input")].map(i=>i.value).join(""); }
+function fieldHTML(id,label,type="text",ph="",auto=""){ return `<label class="field" for="${id}"><span class="lbl">${label}</span><div class="inwrap"><input id="${id}" type="${type}" placeholder="${esc(ph)}" ${auto?`autocomplete="${auto}"`:""} required>${type==="password"?`<button type="button" class="eye" data-eye="${id}" aria-label="Show password">${icon("eye",16)}</button>`:""}</div></label>`; }
+function resendLabel(){ const s=Math.ceil((resendAt-Date.now())/1000); return s>0?`Resend code in ${s}s`:"Resend code"; }
+
+function authPanel(){
+  if(account.mode===null) return `<span class="eyebrow">Secure sign-in</span><h2>Checking your session…</h2><p class="muted">One moment.</p><div class="bar"><i style="width:40%"></i></div>`;
+  if(!sb) return `<span class="eyebrow">Setup needed</span><h2>Connect your database</h2><p class="muted">Add your Supabase project URL and anon key to <b>config.js</b>, then reload this page. The setup guide (README.md) walks through every step.</p>`;
+  const msg=`<div id="authMsg" aria-live="polite"></div>`;
+  const demoNote = DEMO? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode.</b> The database isn't connected yet, so accounts and plans are saved only in this browser and no emails are sent. Add your Supabase keys to config.js to go live.</span></div>` : "";
+  const demoCode = DEMO && window.__demoCode ? `<div class="callout warm"><span class="chip-ic gold">${icon("spark",15)}</span><span><b>Demo mode:</b> in the live site this code arrives by email. Your demo code is <b class="num" style="letter-spacing:.12em">${window.__demoCode}</b></span></div>` : "";
+  if(authView==="login") return `<span class="eyebrow">Welcome back</span><h2>Sign in</h2><p class="muted">Sign in to open your saved plan and dashboard.</p>${demoNote}
+    <form class="aform" data-form="login" novalidate>${fieldHTML("a-email","Email","email","you@email.com","email")}${fieldHTML("a-pass","Password","password","Your password","current-password")}
+      <div class="linkrow"><span></span><button type="button" class="btn-link" data-auth="forgot">Forgot password?</button></div>${msg}
+      <button class="btn btn-primary" type="submit">Sign in ${icon("arrow",16)}</button></form>
+    <div class="or"><span>New to MoneyManager?</span></div><button class="btn btn-ghost" data-auth="register">Create an account</button>`;
+  if(authView==="register") return `<span class="eyebrow">Create your account</span><h2>Start your checkup</h2><p class="muted">We'll email you a 6-digit code to confirm your address.</p>${demoNote}
+    <form class="aform" data-form="register" novalidate>${fieldHTML("a-name","Full name","text","e.g. Jordan Smith","name")}${fieldHTML("a-email","Email","email","you@email.com","email")}
+      <div class="grid g2">${fieldHTML("a-pass","Password","password","8+ characters","new-password")}${fieldHTML("a-pass2","Confirm password","password","Repeat password","new-password")}</div>
+      <span class="hint">Use at least 8 characters, with a mix of letters and numbers.</span>${msg}
+      <button class="btn btn-primary" type="submit">Create account ${icon("arrow",16)}</button></form>
+    <div class="or"><span>Already have an account?</span></div><button class="btn btn-ghost" data-auth="login">Sign in</button>`;
+  if(authView==="verify") return `<span class="eyebrow">Verify your email · step 2 of 2</span><h2>Enter your 6-digit code</h2>
+    <p class="muted">We sent a code to <b style="color:var(--ink)">${esc(authEmail)}</b>. It expires in 1 hour. Check your spam folder if it doesn't arrive in a minute.</p>
+    ${demoCode}<form class="aform" data-form="verify" novalidate>${otpBoxes()}${msg}<button class="btn btn-primary" type="submit">Verify & continue ${icon("arrow",16)}</button></form>
+    <div class="linkrow"><button type="button" class="btn-link" data-auth="resend" id="resendBtn">${resendLabel()}</button><button type="button" class="btn-link" data-auth="register" style="color:var(--muted)">Use a different email</button></div>`;
+  if(authView==="forgot") return `<span class="eyebrow">Reset password</span><h2>Forgot your password?</h2><p class="muted">Enter your account email and we'll send a 6-digit code to reset it.</p>
+    <form class="aform" data-form="forgot" novalidate>${fieldHTML("a-email","Email","email","you@email.com","email")}${msg}<button class="btn btn-primary" type="submit">Send code ${icon("arrow",16)}</button></form>
+    <button class="btn-link" data-auth="login">← Back to sign in</button>`;
+  if(authView==="reset") return `<span class="eyebrow">Reset password · step 2 of 2</span><h2>Choose a new password</h2><p class="muted">Enter the 6-digit code we sent to <b style="color:var(--ink)">${esc(authEmail)}</b>, then your new password.</p>
+    ${demoCode}<form class="aform" data-form="reset" novalidate>${otpBoxes()}<div class="grid g2">${fieldHTML("a-pass","New password","password","8+ characters","new-password")}${fieldHTML("a-pass2","Confirm password","password","Repeat password","new-password")}</div>${msg}
+      <button class="btn btn-primary" type="submit">Update password & sign in</button></form>
+    <div class="linkrow"><button type="button" class="btn-link" data-auth="resend" id="resendBtn">${resendLabel()}</button><button type="button" class="btn-link" data-auth="login" style="color:var(--muted)">Back to sign in</button></div>`;
+  return "";
+}
+function setMsg(t,m){ const el=$("#authMsg"); if(el) el.innerHTML=m?`<div class="callout ${t==="err"?"err":""}"><span>${esc(m)}</span></div>`:""; }
+function goAuth(v){ authView=v; render(); const f=document.querySelector(".aform input"); if(f) f.focus(); if(v==="verify"||v==="reset") startResendTimer(); }
+function startResendTimer(){ clearInterval(resendTimer); resendTimer=setInterval(()=>{ const b=$("#resendBtn"); if(!b){ clearInterval(resendTimer); return; } b.textContent=resendLabel(); if(Date.now()>=resendAt) clearInterval(resendTimer); },1000); }
+function friendly(err){ const m=(err&&err.message)||""; if(/invalid login/i.test(m)) return "Email or password is incorrect."; if(/rate|too many|security purposes/i.test(m)) return "Too many attempts. Please wait a minute and try again."; if(/expired|invalid.*(otp|token)|token.*(expired|invalid)/i.test(m)) return "That code is incorrect or has expired. Check the email or resend a new code."; if(/password/i.test(m)&&/(weak|short|least)/i.test(m)) return "Please choose a stronger password (8+ characters)."; if(/fetch|network/i.test(m)) return "Can't reach the server. Check your internet connection."; return m||"Something went wrong. Please try again."; }
+
+async function authSubmit(form,btn){
+  const v=id=>($("#"+id)?.value||"").trim();
+  const busy=on=>{ if(btn){ btn.disabled=on; if(on){ btn.dataset.t=btn.innerHTML; btn.textContent="Please wait…"; } else if(btn.dataset.t) btn.innerHTML=btn.dataset.t; } };
+  setMsg(); busy(true);
+  try{
+    if(form==="login"){
+      const email=v("a-email").toLowerCase(), password=$("#a-pass").value;
+      if(!EMAIL_RE.test(email)||!password) return setMsg("err","Enter your email and password.");
+      const {data,error}=await sb.auth.signInWithPassword({email,password});
+      if(error){ if(/confirm/i.test(error.message)){ authEmail=email; authFlow="signup"; await sb.auth.resend({type:"signup",email}); resendAt=Date.now()+60000; return goAuth("verify"); } return setMsg("err",friendly(error)); }
+      return onSignedIn(data.session);
+    }
+    if(form==="register"){
+      const name=v("a-name"), email=v("a-email").toLowerCase(), p1=$("#a-pass").value, p2=$("#a-pass2").value;
+      if(!name) return setMsg("err","Enter your full name.");
+      if(!EMAIL_RE.test(email)) return setMsg("err","Enter a valid email address.");
+      if(p1.length<8) return setMsg("err","Your password needs at least 8 characters.");
+      if(p1!==p2) return setMsg("err","The two passwords don't match.");
+      const {data,error}=await sb.auth.signUp({email,password:p1,options:{data:{full_name:name},emailRedirectTo:location.origin+location.pathname}});
+      if(error) return setMsg("err",/registered|exists/i.test(error.message)?"An account with this email already exists. Sign in instead.":friendly(error));
+      if(data.user && Array.isArray(data.user.identities) && data.user.identities.length===0) return setMsg("err","An account with this email already exists. Sign in instead.");
+      if(data.session) return onSignedIn(data.session);   // email confirmation turned off in Supabase
+      authEmail=email; authFlow="signup"; resendAt=Date.now()+60000; return goAuth("verify");
+    }
+    if(form==="verify"){
+      const token=otpValue(); if(!/^\d{6}$/.test(token)) return setMsg("err","Enter all 6 digits of the code.");
+      const {data,error}=await sb.auth.verifyOtp({email:authEmail,token,type:"signup"});
+      if(error) return setMsg("err",friendly(error));
+      toast("Email verified. Welcome to MoneyManager!"); return onSignedIn(data.session);
+    }
+    if(form==="forgot"){
+      const email=v("a-email").toLowerCase(); if(!EMAIL_RE.test(email)) return setMsg("err","Enter a valid email address.");
+      const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+      if(error) return setMsg("err",friendly(error));
+      authEmail=email; authFlow="recovery"; resendAt=Date.now()+60000; return goAuth("reset");
+    }
+    if(form==="reset"){
+      const token=otpValue(), p1=$("#a-pass").value, p2=$("#a-pass2").value;
+      if(!/^\d{6}$/.test(token)) return setMsg("err","Enter all 6 digits of the code.");
+      if(p1.length<8) return setMsg("err","Your new password needs at least 8 characters.");
+      if(p1!==p2) return setMsg("err","The two passwords don't match.");
+      const {data,error}=await sb.auth.verifyOtp({email:authEmail,token,type:"recovery"});
+      if(error) return setMsg("err",friendly(error));
+      const up=await sb.auth.updateUser({password:p1}); if(up.error) return setMsg("err",friendly(up.error));
+      toast("Password updated"); return onSignedIn(data.session);
+    }
+  } catch(e){ setMsg("err",friendly(e)); }
+  finally{ busy(false); }
+}
+async function resendCode(){
+  if(Date.now()<resendAt) return;
+  try{
+    const {error}= authFlow==="recovery"? await sb.auth.resetPasswordForEmail(authEmail,{redirectTo:location.origin+location.pathname}) : await sb.auth.resend({type:"signup",email:authEmail});
+    if(error) return setMsg("err",friendly(error));
+    resendAt=Date.now()+60000; if(DEMO){ render(); startResendTimer(); } else startResendTimer(); setMsg("ok","A new code is on its way.");
+  }catch(e){ setMsg("err",friendly(e)); }
+}
+async function onSignedIn(session){
+  if(!session?.user) return;
+  const u=session.user;
+  account={mode:"cloud",uid:u.id,email:u.email||"",name:(u.user_metadata&&u.user_metadata.full_name)||"",dl:account.dl};
+  await loadData(); view="dashboard"; render();
+}
+async function signOut(){
+  try{ await sb.auth.signOut(); }catch(e){}
+  S=blank(); history=[]; step=0; maxStep=0; account={mode:"none",dl:account.dl}; authView="login"; view="auth"; render();
+}
+
+/* ---------- Persistence (Supabase tables with row-level security) ---------- */
+let saveTimer=null, saving=false, again=false;
+function payload(){ return { state: JSON.stringify(S), step, maxStep, updatedAt: new Date().toISOString(), score: calc().score }; }
+function chip(cls,txt){ const el=$("#saveChip"); if(!el) return; el.className="sync "+cls; el.querySelector("span").textContent=txt; }
+function scheduleSave(){ if(account.mode!=="cloud") return; clearTimeout(saveTimer); chip("busy","Saving…"); saveTimer=setTimeout(doSave,900); }
+async function doSave(){
+  if(account.mode!=="cloud") return;
+  if(saving){ again=true; return; }
+  saving=true;
+  try{
+    const p=payload();
+    const {error}=await sb.from("plans").upsert({user_id:account.uid,state:S,step:p.step,max_step:p.maxStep,score:p.score,updated_at:p.updatedAt});
+    if(error) throw error;
+    chip("",DEMO?"Saved in this browser":"Saved to your account");
+  }catch(e){ chip("err","Couldn't save. Check your connection"); }
+  saving=false; if(again){ again=false; doSave(); }
+}
+async function loadData(){
+  S=blank(); step=0; maxStep=0; history=[];
+  try{
+    const {data,error}=await sb.from("plans").select("state,step,max_step").eq("user_id",account.uid).maybeSingle();
+    if(error) throw error;
+    if(data){ S=merge(blank(),data.state||{}); step=+data.step||0; maxStep=+data.max_step||0; }
+    else if(account.name){ S.profile.name=account.name; }
+    const hs=await sb.from("checkups").select("at,score,grade").eq("user_id",account.uid).order("at",{ascending:false}).limit(8);
+    history=hs.data||[];
+  }catch(e){ toast("Couldn't load your saved plan. Check your connection and reload."); }
+}
+async function saveHistory(){
+  const c=calc();
+  try{
+    const row={user_id:account.uid,score:c.score,grade:grade(c.score),protection_gap:Math.round(sum(c.people.map(x=>x.gap))),retirement_gap:Math.round(c.retGap)};
+    const {data,error}=await sb.from("checkups").insert(row).select("at,score,grade").single();
+    if(error) throw error;
+    history=[data,...history].slice(0,8);
+    toast("Checkup saved to your history"); if(view!=="checkup") render(true);
+  }catch(e){ toast("Couldn't save to history. Try again."); }
+}
+
+/* ---------- UI utilities ---------- */
+function toast(t){ const d=document.createElement("div"); d.className="toast"; d.textContent=t; document.body.appendChild(d); setTimeout(()=>d.remove(),2600); }
+function confirmBox(title,body,okText,fn){
+  const m=document.createElement("div"); m.className="modal";
+  m.innerHTML=`<div class="box" role="dialog" aria-modal="true"><h3>${esc(title)}</h3><p class="muted">${esc(body)}</p><div style="display:flex;gap:10px;justify-content:flex-end"><button class="btn btn-ghost" data-x>Cancel</button><button class="btn btn-danger" data-ok>${esc(okText)}</button></div></div>`;
+  m.addEventListener("click",e=>{ if(e.target===m||e.target.closest("[data-x]")) m.remove(); if(e.target.closest("[data-ok]")){ m.remove(); fn(); } });
+  document.body.appendChild(m); m.querySelector("[data-ok]").focus();
+}
+function go(i){ step=Math.max(0,Math.min(STEPS.length-1,i)); maxStep=Math.max(maxStep,step); view="checkup"; menuOpen=false; render(); scheduleSave(); }
+
+
+/* ================= UI (Aurum-style) ================= */
+const IC={
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ check:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+ wallet:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2z"/><circle cx="16" cy="14.5" r="1.2"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+ target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+ bank:'<path d="M3 10h18M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18M12 3l9 5H3z"/>',
+ plan:'<path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.5 1.5L7.5 5M3.5 12l1.5 1.5 2.5-2.5M3.5 18l1.5 1.5 2.5-2.5"/>',
+ file:'<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+ menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+ down:'<path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>',
+ sheet:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
+ trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>',
+ cap:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/>',
+ pct:'<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+ arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 3v4M17 5h4"/>',
+ house:'<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/>',
+ car:'<path d="M5 16V11l2-5h10l2 5v5"/><path d="M3 16h18v3H3zM7 19v2M17 19v2"/>',
+ cart:'<circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.5 12h11L21 7H6"/>',
+ bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+ card:'<rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M6 15h4"/>',
+ phone:'<rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M11 18h2"/>',
+ film:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 4v16M17 4v16M3 9h4M3 15h4M17 9h4M17 15h4"/>',
+ dots:'<circle cx="6" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="18" cy="12" r="1.2"/>',
+ piggy:'<path d="M19 10c1 0 2 .5 2 2v2h-2l-1 2.5V19h-3v-1.5h-4V19H8v-2.5A6 6 0 0 1 11 6h3a6 6 0 0 1 5 4z"/><circle cx="15.5" cy="10.5" r=".8"/>',
+ umbrella:'<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v7a2 2 0 0 1-4 0"/>',
+ scroll:'<path d="M8 3h11v15a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3v-1h11v1a3 3 0 0 0 3 3"/><path d="M8 3a3 3 0 0 0-3 3v11M11 8h5M11 12h5"/>',
+ save:'<path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v6h8V3M7 21v-7h10v7"/>'
+};
+const icon=(n,s=18)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||""}</svg>`;
+
+const NAV=[["dashboard","Dashboard","home"],["checkup","Financial checkup","check"],["cashflow","Cash flow & budget","wallet"],["protection","Family protection","shield"],["goals","Retirement & college","target"],["networth","Net worth","bank"],["plan","Action plan","plan"],["report","Reports & Excel","file"]];
+const TITLES={dashboard:"Dashboard",checkup:"Financial checkup",cashflow:"Cash flow & budget",protection:"Family protection",goals:"Retirement & college",networth:"Net worth",plan:"Action plan",report:"Reports"};
+let reportTab="full", sheetTab=0, cfTab="cat", menuOpen=false;
+
+/* ---------- shared data helpers ---------- */
+function famName(){ return S.profile.name? (S.profile.name.replace(/\(.*\)/,"").trim().split(" ").slice(-1)[0]+" family") : "Your family"; }
+function toneScore(v){ return v==null?"na": v>=80?"good":v>=50?"warn":"bad"; }
+function goalTone(r){ return r>=.8?["good","On track"]: r>=.5?["warn","At risk"]:["bad","Behind"]; }
+const pill=(t,txt)=>`<span class="pill ${t}">${txt}</span>`;
+function netWorth(){ const a=S.assets, d=S.dime;
+  const assets=[["Cash & savings",+a.cash||0,"var(--c2)","Cash","Taxable"],["Investments",+a.investments||0,"var(--c3)","Brokerage","Taxable"],["Retirement accounts",+a.retirement||0,"var(--c1)","Retirement",(S.retirement.accounts||[]).some(x=>/Roth/.test(x))?"Tax-deferred / tax-free":"Tax-deferred"],["Home",+a.homeValue||0,"var(--c5)","Real estate","Primary residence"],["Other assets",+a.other||0,"var(--c4)","Other","—"]];
+  const debts=[["Mortgage",+d.mortgage||0,"var(--c1)","Secured by home"],["Auto loans",+d.auto||0,"var(--c3)","Secured"],["Student loans",+d.student||0,"var(--c4)","Fixed payments"],["Credit cards",+d.cc||0,"var(--neg)","High interest — pay first"],["Other debts",+d.otherDebt||0,"var(--c7)","—"]];
+  const A=sum(assets.map(x=>x[1])), D=sum(debts.map(x=>x[1]));
+  return {assets:A,debts:D,net:A-D,aList:assets,dList:debts}; }
+const AREAS=[["cash","Cash flow"],["emergency","Emergency fund"],["debt","Debt"],["protection","Family protection"],["education","College"],["retirement","Retirement"],["estate","Estate plan"]];
+function cashSegs(c){ const e=S.expenses; const segs=[["Housing",+e.housing,"var(--c1)"],["Saving & investing",c.saveInvest,"var(--c2)"],["Living costs",+e.utilities+ +e.food+ +e.phone+ +e.other,"var(--c3)"],["Transportation",+e.transport,"var(--c4)"],["Family & care",+e.childcare+ +e.family+ +e.insurance,"var(--c5)"],["Debt payments",+e.debt,"var(--c6)"],["Lifestyle",+e.fun,"var(--c7)"]];
+  if(c.surplus>0) segs.push(["Unassigned",c.surplus,"var(--c8)"]); return segs.filter(x=>x[1]>0); }
+function dateStr(d=new Date()){ return d.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"}); }
+function hasData(){ return (+S.income.primary||0)+(+S.income.spouse||0)+(+S.income.other||0)>0 || sum(Object.values(S.expenses))>0; }
+
+/* ---------- chart components ---------- */
+function ring(frac,size=180,label="",color="var(--gold)",textOverride){
+  const r=42,C=2*Math.PI*r, f=clamp(frac||0);
+  return `<div class="ring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--track)" stroke-width="10"/><circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-dasharray="${C*f} ${C}"/></svg><div class="rc"><b style="font-size:${size*.24}px">${textOverride??Math.round(f*100)+"%"}</b>${label?`<span>${label}</span>`:""}</div></div>`; }
+function ringSVG(score,size=180){ return ring(score/100,size,"of 100",score>=70?"var(--c2)":score>=50?"var(--gold)":"var(--neg)",String(score)); }
+function donut(segs,center,sub,size=180){
+  const tot=sum(segs.map(x=>x[1]))||1, r=38, C=2*Math.PI*r; let off=0;
+  const arcs=segs.map(([l,v,col])=>{ const len=v/tot*C; const el=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${col}" stroke-width="20" stroke-dasharray="${Math.max(0,len-.8)} ${C}" stroke-dashoffset="${-off}"><title>${esc(l)} ${$f(v)}</title></circle>`; off+=len; return el; }).join("");
+  return `<div class="donut" style="width:${size}px;height:${size}px;margin:0 auto"><svg viewBox="0 0 100 100" role="img" aria-label="${esc(sub)}"><g transform="rotate(-90 50 50)"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--track)" stroke-width="20"/>${arcs}</g></svg><div class="dc"><b class="num">${center}</b><span>${sub}</span></div></div>`; }
+function donutLegend(segs){ const tot=sum(segs.map(x=>x[1]))||1; return `<div class="dleg">${segs.map(([l,v,col])=>`<div><i style="background:${col}"></i><span>${esc(l)}</span><b class="num">${$f(v)}</b><span class="p num">${(v/tot*100).toFixed(1)}%</span></div>`).join("")}</div>`; }
+function cashDonut(c){ const segs=cashSegs(c); return `<div style="display:grid;gap:20px">${donut(segs,$k(c.takeHome),"per month")}${donutLegend(segs)}</div>`; }
+function scoreBars(c){ return `<div style="display:grid;gap:16px">${AREAS.map(([k,l])=>{ const v=c.sc[k]; return `<div class="hb"><div class="hb-l"><span>${l}</span><span>${v==null?`<span class="muted">n/a</span>`:`<b class="num">${Math.round(v)}</b><span class="muted"> / 100</span>`}</span></div><div class="bar"><i class="${toneScore(v)}" style="width:${v==null?0:Math.max(2,v)}%"></i></div></div>`; }).join("")}</div>`; }
+function netWorthBars(c){ const nw=netWorth(), mx=Math.max(nw.assets,nw.debts)||1;
+  const bar=(list,tot,label)=>`<div class="hb"><div class="hb-l"><span>${label}</span><b class="num">${$f(tot)}</b></div><div class="stackbar" style="height:14px">${list.filter(x=>x[1]>0).map(([l,v,col])=>`<i title="${esc(l)} ${$f(v)}" style="width:${v/mx*100}%;background:${col}"></i>`).join("")}</div><div class="legend">${list.filter(x=>x[1]>0).map(([l,v,col])=>`<span><i style="background:${col}"></i>${esc(l)} ${$k(v)}</span>`).join("")}</div></div>`;
+  return `<div style="display:grid;gap:18px">${bar(nw.aList,nw.assets,"What you own")}${bar(nw.dList,nw.debts,"What you owe")}</div>`; }
+function dimeBlock(x){ const tot=Math.max(x.need,1), have=Math.min(x.need,x.liquid), cov=Math.min(x.need-have,x.cover);
+  return `<div class="hb"><div class="hb-l"><span><b>${esc(x.who)}</b> · DIME need</span><b class="num">${$f(x.need)}</b></div>
+    <div class="stackbar" style="height:14px"><i style="width:${x.D/tot*100}%;background:var(--c1)"></i><i style="width:${x.I/tot*100}%;background:var(--c2)"></i><i style="width:${x.M/tot*100}%;background:var(--c3)"></i><i style="width:${x.E/tot*100}%;background:var(--c5)"></i></div>
+    <div class="hb-l" style="margin-top:4px"><span class="muted">Covered today</span><span class="num">${$f(have+cov)} · <span class="neg">gap ${$f(x.gap)}</span></span></div>
+    <div class="stackbar" style="height:14px"><i style="width:${have/tot*100}%;background:var(--c4)"></i><i style="width:${cov/tot*100}%;background:var(--c2)"></i><i class="hatch" style="width:${x.gap/tot*100}%;background:none"></i></div></div>`; }
+function dimeChart(c){ return `<div class="legend"><span><i style="background:var(--c1)"></i>Debt</span><span><i style="background:var(--c2)"></i>Income / insurance</span><span><i style="background:var(--c3)"></i>Mortgage</span><span><i style="background:var(--c5)"></i>Education</span><span><i style="background:var(--c4)"></i>Assets</span><span><i class="hatch" style="background:none"></i>Gap</span></div><div style="display:grid;gap:22px">${c.people.map(dimeBlock).join("")}</div>`; }
+function collegeBars(c){ return c.ckids.length? `<div style="display:grid;gap:18px">${c.ckids.map(k=>{ const r=k.target?Math.min(1,k.proj/k.target):1; return `<div class="hb"><div class="hb-l"><span><b>${esc(k.name)}</b> · ${esc(k.type)}</span><span class="num">${$k(k.proj)} <span class="muted">/ ${$k(k.target)}</span></span></div><div class="bar"><i class="${goalTone(r)[0]}" style="width:${r*100}%"></i></div><div class="hb-l"><span class="hint">${k.yTo} years to college</span><span class="hint">${k.gap?`+${$f(k.monthlyNeed)}/mo needed`:"On track"}</span></div></div>`; }).join("")}</div>`:`<p class="muted">No children listed.</p>`; }
+function retChart(c){
+  const s=c.retSeries; if(s.length<2) return `<p class="muted">You're at or past your target retirement age.</p>`;
+  const W=640,H=250,L=56,R=14,T=22,B=30, max=Math.max(c.retTarget,c.retProj)*1.1||1;
+  const x=i=>L+(W-L-R)*i/(s.length-1), y=v=>T+(H-T-B)*(1-v/max);
+  const path=s.map((p,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
+  const ticks=[0,.5,1].map(f=>max/1.1*f);
+  return `<div style="overflow-x:auto"><svg class="chart" viewBox="0 0 ${W} ${H}" style="width:100%;min-width:440px;height:auto" role="img" aria-label="Projected retirement savings by age">
+    ${ticks.map(t=>`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${L-8}" y="${y(t)+4}" text-anchor="end">${$k(t)}</text>`).join("")}
+    <path d="${path}L${x(s.length-1)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--c2)" fill-opacity=".1"/>
+    <path d="${path}" fill="none" stroke="var(--c2)" stroke-width="2.4" stroke-dasharray="6 4"/>
+    <circle cx="${x(0)}" cy="${y(s[0].v)}" r="4.5" fill="var(--c1)"/>
+    <line x1="${L}" x2="${W-R}" y1="${y(c.retTarget)}" y2="${y(c.retTarget)}" stroke="var(--gold)" stroke-width="2"/>
+    <text x="${W-R}" y="${y(c.retTarget)-7}" text-anchor="end" style="fill:var(--gold-ink);font-weight:600">Needed ${$k(c.retTarget)}</text>
+    <circle cx="${x(s.length-1)}" cy="${y(c.retProj)}" r="5" fill="var(--c2)"/>
+    <text x="${x(s.length-1)-8}" y="${y(c.retProj)+(c.retProj>c.retTarget*.85?18:-10)}" text-anchor="end" style="fill:var(--ink);font-weight:600">Projected ${$k(c.retProj)}</text>
+    <text x="${L}" y="${H-8}">Age ${s[0].age} · today</text><text x="${W-R}" y="${H-8}" text-anchor="end">Age ${s.at(-1).age}</text></svg></div>`; }
+function planChart(c,list=c.actions){ if(!list.length) return `<p class="muted">No gaps to fund. Keep investing your surplus.</p>`;
+  const mx=Math.max(...list.map(a=>a.amt),1);
+  return `<div class="plan">${list.map((a,i)=>{ const st=a.funded>=a.amt-1?["good","Funded"]:a.funded>0?["warn","Partly funded"]:["bad","Next phase"];
+    return `<div class="prow"><div class="pl"><b>${i+1}. ${esc(a.title)}</b><span>${esc(a.why)}</span></div>
+      <div class="pt"><div class="ptrack"><i class="need" style="width:${a.amt/mx*100}%"></i><i class="fund" style="width:${a.funded/mx*100}%"></i></div><span class="num"><b>${$f(a.funded)}</b> <span class="muted">of ${$f(a.amt)}/mo${a.est?"*":""}</span></span></div>
+      ${pill(st[0],st[1])}</div>`; }).join("")}</div>
+    <div class="legend"><span><i style="background:var(--c2)"></i>Funded from your monthly budget</span><span><i class="hatch" style="background:none"></i>Still needed</span></div>`; }
+function trendChart(c){
+  const pts=[...history].reverse().map(h=>({d:new Date(h.at),v:+h.score||0}));
+  if(!pts.length || Math.abs((pts.at(-1)?.d||0)-Date.now())>6e4) pts.push({d:new Date(),v:c.score,now:true});
+  if(pts.length<2) return `<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">${ringSVG(c.score,120)}<div style="display:grid;gap:10px;flex:1;min-width:180px"><p class="muted" style="font-size:13.5px">Save each checkup to track how your score improves over time.</p><div><button class="btn btn-ghost btn-sm" data-act="savehist">${icon("save",15)} Save today's checkup</button></div></div></div>`;
+  const W=420,H=190,L=30,R=12,T=14,B=26, x=i=>L+(W-L-R)*i/(pts.length-1), y=v=>T+(H-T-B)*(1-v/100);
+  const path=pts.map((p,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Health score over time">
+    ${[0,50,100].map(t=>`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)"/><text x="${L-6}" y="${y(t)+4}" text-anchor="end">${t}</text>`).join("")}
+    <path d="${path}L${x(pts.length-1)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--c2)" fill-opacity=".1"/><path d="${path}" fill="none" stroke="var(--c2)" stroke-width="2.4"/>
+    ${pts.map((p,i)=>`<circle cx="${x(i)}" cy="${y(p.v)}" r="${i===pts.length-1?5:3.5}" fill="${i===pts.length-1?"var(--c1)":"var(--surface)"}" stroke="var(--c2)" stroke-width="2"><title>${p.d.toLocaleDateString()} · ${p.v}</title></circle>`).join("")}
+    <text x="${L}" y="${H-6}">${pts[0].d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}</text><text x="${W-R}" y="${H-6}" text-anchor="end">Today · ${pts.at(-1).v}</text></svg>`; }
+function timelineHTML(c){ const [d30,d90,d12]=timeline(c); return `<div class="timeline">
+  <div class="tl"><span class="eyebrow">First 30 days</span><h4>Protect & organize</h4><ul>${d30.map(x=>`<li>${esc(x)}</li>`).join("")||"<li>Review this report</li>"}</ul></div>
+  <div class="tl"><span class="eyebrow">Within 90 days</span><h4>Build momentum</h4><ul>${d90.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div>
+  <div class="tl"><span class="eyebrow">Within 12 months</span><h4>Grow & review</h4><ul>${d12.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></div></div>`; }
+function kcard(label,ic,val,foot,cls=""){ return `<div class="kcard ${cls.includes("neg-tint")?"neg-tint":""}"><div class="kh"><span>${label}</span>${icon(ic,16)}</div><div class="kv num ${cls.replace("neg-tint","")}">${val}</div><div class="kf">${foot}</div></div>`; }
+function goalCards(c){
+  const G=[];
+  G.push({ic:"umbrella",t:"Emergency fund",cur:+S.assets.cash||0,tgt:c.efTarget,note:c.emMonths>=6?"Fully funded. Keep it in high-yield savings.":`${c.emMonths.toFixed(1)} of 6 months saved.`});
+  G.push({ic:"shield",t:"Family protection",cur:sum(c.people.map(x=>Math.min(x.need,x.liquid+x.cover))),tgt:c.totalNeed,note:`Gap ${$k(sum(c.people.map(x=>x.gap)))} across ${c.people.length} ${c.people.length>1?"earners":"earner"}.`});
+  c.ckids.forEach(k=>G.push({ic:"cap",t:`College: ${k.name}`,cur:Math.min(k.proj,k.target),tgt:k.target,note:k.gap?`+${$f(k.monthlyNeed)}/mo closes it by ${new Date().getFullYear()+k.yTo}.`:"On track.",proj:true}));
+  G.push({ic:"trend",t:`Retirement at ${S.retirement.retireAge}`,cur:Math.min(c.retProj,c.retTarget),tgt:c.retTarget,note:c.retGap?`+${$f(c.retExtra)}/mo closes the gap.`:"On track.",proj:true});
+  G.push({ic:"scroll",t:"Estate documents",cur:c.estDone,tgt:c.estItems.length,cnt:true,note:`${c.estItems.length-c.estDone} documents still to do.`});
+  return `<div class="goals">${G.map(g=>{ const r=g.tgt?clamp(g.cur/g.tgt):1, [t,l]=goalTone(r); return `<div class="gcard"><div class="gh"><span class="chip-ic gold">${icon(g.ic,16)}</span><b>${esc(g.t)}</b>${pill(t,l)}</div>
+    <div class="gv"><span class="num"><b>${g.cnt?g.cur:$k(g.cur)}</b> <span class="muted">/ ${g.cnt?g.tgt:$k(g.tgt)}${g.proj?" projected":""}</span></span><span class="serif">${Math.round(r*100)}%</span></div>
+    <div class="bar"><i class="${t}" style="width:${r*100}%"></i></div><div class="note">${esc(g.note)}</div></div>`; }).join("")}</div>`; }
+function insights(c){ const L=[]; const gap=c.needTotal-c.fundedTotal;
+  if(c.actions.length) L.push(`Your plan needs <b>${$f(c.needTotal)}</b>/month and your budget is <b>${$f(c.budget)}</b>${gap>1?`, a <span class="neg"><b>${$f(gap)}</b></span> monthly gap. The top priorities are funded first.`:". Every priority is funded."}`);
+  if(c.surplus>c.budget+1) L.push(`You have <b>${$f(c.surplus-c.budget)}</b>/month of surplus not assigned to the plan. Moving it in would fund more priorities right away.`);
+  if(c.surplus<0) L.push(`You're spending <span class="neg"><b>${$f(-c.surplus)}</b></span> more than you take home each month. Fixing cash flow comes first.`);
+  L.push(`Family protection covers <b>${pct(c.protScore)}</b> of the DIME need. ${c.people.filter(x=>x.gap).map(x=>`${esc(x.who)}'s gap is <b>${$k(x.gap)}</b>`).join(" and ")||"No gaps."}`);
+  if(c.retGap>0) L.push(`Retirement is <b>${pct(c.retProj/c.retTarget)}</b> on track. Adding about <b>${$f(c.retExtra)}</b>/month, or 1% more each year, closes it.`);
+  if(c.emMonths<6) L.push(`Emergency savings cover <b>${c.emMonths.toFixed(1)} months</b> of expenses; 6 months is the goal.`);
+  return `<ul class="ins">${L.slice(0,4).map(x=>`<li>${x}</li>`).join("")}</ul>`; }
+
+/* ---------- shell ---------- */
+function themeNow(){ const t=document.documentElement.dataset.theme; if(t) return t; return matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; }
+function shell(page,body){
+  const nm=account.name||firstName(S.profile.name)||"You", c=calc();
+  const primary = page==="checkup"? `<button class="btn btn-primary" data-act="finish">${icon("file",16)} View report</button>` : `<button class="btn btn-primary" data-nav="checkup">${icon("plus",16)} ${hasData()?"Update checkup":"Start checkup"}</button>`;
+  return `<div class="app">
+  <aside class="side ${menuOpen?"open":""}" id="side">
+    <button class="logo" data-nav="dashboard" aria-label="MoneyManager dashboard"><span class="mark"><span>M</span></span><span class="wm">MoneyManager</span></button>
+    <nav class="nav" aria-label="Main">${NAV.map(([k,l,ic])=>`<button data-nav="${k}" ${page===k?'aria-current="page"':""}>${icon(ic)}<span>${l}</span>${k==="checkup"&&maxStep<STEPS.length-1&&hasData()?'<i class="dot"></i>':""}</button>`).join("")}</nav>
+    <div class="side-foot">
+      <div class="mini">${icon("sheet",18)}<div style="min-width:0"><b>Private to your account</b><span>${hasData()?`Health score ${c.score}/100`:"No one else can see your plan"}</span></div></div>
+      <div class="mini user"><span class="av">${esc(nm.slice(0,1).toUpperCase())}</span><div style="min-width:0"><b>${esc(nm)}</b><span>${esc(account.email||"Signed in")}</span></div><button class="signout" data-act="signout" aria-label="Sign out" title="Sign out">${icon("logout",16)}</button></div>
+    </div>
+  </aside>
+  <div class="scrim ${menuOpen?"open":""}" data-act="menu"></div>
+  <div class="main">
+    <header class="top"><div class="top-in">
+      <button class="menu-btn" data-act="menu" aria-label="Open menu">${icon("menu")}</button>
+      <h1>${TITLES[page]}</h1>
+      <span class="pillbtn datepill">${icon("cal",15)} ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</span>
+      <div class="top-r">
+        ${DEMO?`<span class="pill warn" title="Data is saved in this browser only">Demo mode</span>`:""}<span class="sync" id="saveChip"><i></i><span>${DEMO?"Saved in this browser":"Saved to your account"}</span></span>
+        <div class="theme" role="group" aria-label="Theme"><button data-theme-set="light" aria-pressed="${themeNow()==="light"}" aria-label="Light">${icon("sun",15)}</button><button data-theme-set="dark" aria-pressed="${themeNow()==="dark"}" aria-label="Dark">${icon("moon",15)}</button></div>
+        ${primary}
+      </div></div></header>
+    <main class="content" id="app">${body}</main>
+  </div></div>`; }
+function emptyState(){ return `<div class="card" style="max-width:760px"><span class="eyebrow">Let's begin</span><h2 class="serif" style="font-size:30px">Your first financial checkup takes about 10 minutes.</h2>
+  <p class="muted">Start with your family and income for a quick snapshot, then go deeper with the DIME analysis, insurance, college, retirement and estate questions. Everything saves as you go, and every page here fills in with your numbers.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" data-act="start">Start my checkup ${icon("arrow",16)}</button><button class="btn btn-ghost" data-act="loadsample">Explore with example family</button></div></div>`; }
+
+/* ---------- pages ---------- */
+function pageDashboard(){
+  if(!hasData()) return `<div style="display:grid;gap:22px"><div class="greet"><h2>${greeting()}</h2><p>${dateStr()} · Let's build your financial picture.</p></div>${emptyState()}</div>`;
+  const c=calc(), nw=netWorth(), gapAll=sum(c.people.map(x=>x.gap)), covered=c.totalNeed-gapAll, fp=c.needTotal?c.fundedTotal/c.needTotal:1;
+  const last=history[0]; const dScore = last? c.score-(+last.score||0) : null;
+  return `<div style="display:grid;gap:22px">
+  <div class="ch"><div class="greet"><h2>${greeting()}</h2><p>${new Date().toLocaleDateString("en-US",{weekday:"long"})}, ${dateStr()} · Here is the ${esc(famName())}'s financial picture.</p></div>
+    <button class="btn btn-ghost btn-sm" data-nav="report">${icon("down",15)} Reports & Excel</button></div>
+  <div class="kpis">
+    ${kcard("Net worth","bank",$f(nw.net),`${pill("na",$k(nw.assets)+" assets")} ${$k(nw.debts)} debts`,"hero")}
+    ${kcard("Take-home this month","trend",$f(c.takeHome),`${pill("na",$k(c.grossAnnual)+"/yr gross")}`)}
+    ${kcard("Spending this month","wallet",$f(c.expenses),`${pill(c.surplus>=0?"good":"bad",(c.surplus>=0?"▲ ":"▼ ")+$f(Math.abs(c.surplus)))} ${c.surplus>=0?"left over":"short"}`)}
+    ${kcard("Savings rate","pct",pct(c.savingsRate),`${pill(c.savingsRate>=.15?"good":"warn",c.savingsRate>=.15?"On target":"Goal 15–20%")}`)}
+    ${kcard("Health score","heart",`${c.score}<span class="muted" style="font-size:16px"> /100</span>`,`${pill(toneScore(c.score),grade(c.score))} ${dScore!=null?`${dScore>=0?"▲":"▼"} ${Math.abs(dScore)} vs last`:""}`)}
+  </div>
+  <div class="grid12">
+    <section class="card s7"><div class="feat">${ring(c.totalNeed?covered/c.totalNeed:1,190,"covered")}
+      <div style="display:grid;gap:14px;min-width:0"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="eyebrow">Featured goal</span>${pill(goalTone(c.protScore)[0],goalTone(c.protScore)[1])}</div>
+        <h2>Protect the ${esc(famName())}</h2>
+        <div><span class="big num">${$f(covered)}</span> <span class="muted">of ${$f(c.totalNeed)}</span><div class="hint">DIME need covered by assets and insurance</div></div>
+        <div class="facts">${c.people.map(x=>`<div class="fact"><span>${esc(x.who)}'s gap</span><b class="num ${x.gap?"neg":"pos"}">${$f(x.gap)}</b></div>`).join("")}
+          <div class="fact"><span>Est. monthly cost*</span><b class="num">${$f(sum(c.people.map(x=>x.gap?termEstimate(x.gap,x.age):0)))}</b></div><div class="fact"><span>Income replaced</span><b>${c.yrs} years</b></div></div>
+        <button class="btn-link" data-nav="protection">Open family protection ${icon("arrow",14)}</button></div></div></section>
+    <section class="card s5"><div class="ch"><div><h3>Plan funding</h3><div class="sub">Your monthly budget vs. what the plan needs</div></div>${pill(fp>=1?"good":fp>=.5?"warn":"bad",pct(fp)+" funded")}</div>
+      <div class="facts"><div class="fact"><span>Monthly budget</span><b class="big num">${$f(c.budget)}</b></div><div class="fact"><span>Plan needs</span><b class="big num">${$f(c.needTotal)}</b></div></div>
+      <div style="display:grid;gap:8px"><div class="stackbar" style="height:16px"><i style="width:${fp*100}%;background:var(--c2)"></i><i class="hatch" style="width:${(1-fp)*100}%;background:none"></i></div>
+      <div class="legend"><span><i style="background:var(--c2)"></i>Funded</span><span><i class="hatch" style="background:none"></i>Still needed</span></div></div>
+      ${c.needTotal-c.fundedTotal>1?`<div class="callbox neg"><div><div class="hint" style="color:var(--ink2)">Gap to fully fund the plan</div><span class="big num">−${$f(c.needTotal-c.fundedTotal)}</span></div><button class="btn-link" data-nav="plan">Open action plan ${icon("arrow",14)}</button></div>`:`<div class="callbox good"><b>Every priority is funded.</b><button class="btn-link" data-nav="plan">Open action plan ${icon("arrow",14)}</button></div>`}</section>
+    <section class="card s7"><div class="ch"><div><h3>Financial health by area</h3><div class="sub">Each area scored 0–100 · green 80+ · gold 50–79 · red under 50</div></div>${pill(toneScore(c.score),`${c.score}/100 · ${grade(c.score)}`)}</div>${scoreBars(c)}</section>
+    <section class="card s5"><div class="ch"><div><h3>Spending by category</h3><div class="sub">Where your take-home pay goes</div></div><span class="muted" style="font-size:12.5px">Monthly</span></div>${cashDonut(c)}</section>
+    <section class="card s4"><div class="ch"><h3>Net worth</h3><span class="muted" style="font-size:12.5px">Today</span></div><div class="kv hero num" style="font-size:32px">${$f(nw.net)}</div>${netWorthBars(c)}</section>
+    <section class="card s4"><div class="ch"><h3>Retirement snapshot</h3><button class="btn-link" data-nav="goals">Details ${icon("arrow",14)}</button></div>
+      <div><span class="hint">Needed at age ${S.retirement.retireAge} (4% rule)</span><div class="kv hero num" style="font-size:32px">${$f(c.retTarget)}</div></div>
+      <div class="hb"><div class="hb-l"><span>Projected</span><b class="num">${pct(c.retTarget?Math.min(1,c.retProj/c.retTarget):1)}</b></div><div class="bar"><i class="${toneScore(c.sc.retirement)}" style="width:${c.retTarget?Math.min(1,c.retProj/c.retTarget)*100:100}%"></i></div><span class="hint">${$f(c.retProj)} projected at current pace</span></div>
+      <div class="facts"><div class="fact"><span>Years to retire</span><b class="big">~${c.yRet}</b></div><div class="fact"><span>Extra needed</span><b class="big num">${$f(c.retExtra)}<span class="muted" style="font-size:13px">/mo</span></b></div></div></section>
+    <section class="card s4"><div class="ch"><h3>College funds</h3><button class="btn-link" data-nav="goals">Details ${icon("arrow",14)}</button></div>${collegeBars(c)}</section>
+    <section class="card s12"><div class="ch"><h3>All goals</h3><button class="btn-link" data-nav="goals">Manage goals ${icon("arrow",14)}</button></div>${goalCards(c)}</section>
+    <section class="card s7"><div class="ch"><h3>Top recommendations</h3><button class="btn-link" data-nav="report">Full report ${icon("arrow",14)}</button></div><div class="recs">${recs(c).slice(0,4).map(([t,h,b],i)=>`<div class="rec"><span class="n ${t}">${i+1}</span><div><h4>${esc(h)}</h4><p>${esc(b)}</p></div></div>`).join("")}</div></section>
+    <section class="card s5"><div class="ch"><div style="display:flex;gap:10px;align-items:center"><span class="chip-ic gold">${icon("spark",16)}</span><h3>Insights</h3></div></div>${insights(c)}
+      <div class="ch" style="border-top:1px solid var(--line2);padding-top:14px"><h3 style="font-size:14px">Score over time</h3></div>${trendChart(c)}</section>
+  </div>
+  <p class="disc">*Rough illustrative estimates for a healthy non-smoker; actual premiums vary by health, age, product and carrier. Educational use only; not financial, tax or legal advice.</p></div>`; }
+function greeting(){ const h=new Date().getHours(); const n=account.name? account.name.split(" ")[0] : firstName(S.profile.name); return `Good ${h<12?"morning":h<17?"afternoon":"evening"}${n&&n!=="You"?", "+esc(n):""}`; }
+
+function pageCheckup(){
+  return `<div class="stepper" role="tablist">${STEPS.map((s,i)=>`<button data-go="${i}" class="${i===step?"on":""} ${i<=maxStep&&i!==step?"done":""}"><span class="n">${i<=maxStep&&i!==step?"✓":i+1}</span>${s.t}</button>`).join("")}</div>
+  <div class="ck"><section class="card" style="gap:22px">${stepBody(step)}
+    <div class="navbar"><div>${step>0?`<button class="btn btn-ghost" data-act="back">← Back</button>`:`<button class="btn-link" data-act="loadsample">Fill with example family</button>`}</div>
+    ${step<STEPS.length-1?`<button class="btn btn-primary" data-act="next">Next: ${STEPS[step+1].t} ${icon("arrow",16)}</button>`:`<button class="btn btn-primary" data-act="finish">See my financial report ${icon("arrow",16)}</button>`}</div></section>
+  <aside class="card" id="live" style="position:sticky;top:96px">${liveHTML()}</aside></div>`; }
+function liveHTML(){ const c=calc(); const k=(l,v,cls="")=>`<div><span>${l}</span><b class="num ${cls}">${v}</b></div>`;
+  return `<div class="ch"><h3>Quick facts</h3><span class="muted" style="font-size:12.5px">Updates as you type</span></div>
+   <div><span class="hint">Monthly surplus</span><div class="kv num ${c.surplus<0?"negv":"hero"}">${$f(c.surplus)}</div></div>
+   <div class="facts-list">${k("Household income",$f(c.grossAnnual)+"/yr")}${k("Monthly expenses",$f(c.expenses))}${k("Savings rate",pct(c.savingsRate),c.savingsRate>=.15?"pos":"")}${k("Emergency fund",c.emMonths.toFixed(1)+" months",c.emMonths>=6?"pos":c.emMonths<3?"neg":"")}
+   ${step>=2?k("DIME need",$k(c.totalNeed)):""}${step>=4?k("Protection gap",$k(sum(c.people.map(x=>x.gap))),sum(c.people.map(x=>x.gap))>0?"neg":"pos"):""}${step>=6?k("Retirement gap",$k(c.retGap),c.retGap>0?"neg":"pos"):""}${step>=7?k("Health score",c.score+"/100"):""}</div>`; }
+function refreshLive(){ const l=$("#live"); if(l) l.innerHTML=liveHTML(); const c=calc();
+  const box={snapshot:snapshotCallout,dimebox:dimeCallout,assetbox:assetCallout,retbox:retCallout};
+  for(const id in box){ const el=document.getElementById(id); if(el) el.innerHTML=box[id](c); } }
+
+const CAT_IC={housing:"house",utilities:"bolt",food:"cart",transport:"car",insurance:"shield",childcare:"users",debt:"card",phone:"phone",family:"heart",fun:"film",other:"dots"};
+function pageCashflow(){
+  if(!hasData()) return emptyState();
+  const c=calc(), e=S.expenses, th=c.takeHome||1;
+  const rows=[["housing","Rent / mortgage","Essential"],["utilities","Utilities","Essential"],["food","Groceries & dining","Essential"],["transport","Car & transportation","Essential"],["insurance","Insurance premiums","Essential"],["childcare","Childcare & school","Essential"],["debt","Debt payments","Essential"],["phone","Phone, internet & subscriptions","Flexible"],["family","Support for parents / family","Flexible"],["fun","Entertainment & travel","Flexible"],["other","Everything else","Flexible"]];
+  const mx=Math.max(...rows.map(r=>+e[r[0]]||0),1);
+  const needs=sum(rows.filter(r=>r[2]==="Essential").map(r=>e[r[0]])), wants=sum(rows.filter(r=>r[2]==="Flexible").map(r=>e[r[0]])), saves=c.saveInvest+(+S.retirement.monthly||0);
+  const base=needs+wants+saves||1;
+  const fifty=[["Needs","Housing, food, transport, insurance, childcare, debt",needs,.5],["Wants","Lifestyle, subscriptions, family support, other",wants,.3],["Savings","Saving, investing & retirement",saves,.2]];
+  return `<div style="display:grid;gap:22px">
+  <div class="kpis k4">${kcard("Take-home pay","trend",$f(c.takeHome),`${pill("na",$f(c.grossMonthly)+" gross")} per month`)}${kcard("Spending","wallet",$f(c.expenses),`${(c.expenses/th*100).toFixed(1)}% of take-home`)}${kcard("Saving & investing","piggy",$f(c.saveInvest),`Savings rate ${pct(c.savingsRate)} incl. retirement`)}${kcard(c.surplus>=0?"Unassigned surplus":"Monthly shortfall","pct",(c.surplus<0?"−":"")+$f(Math.abs(c.surplus)),c.surplus>=0?"Available for your plan":"Spending more than take-home",c.surplus>=0?"hero":"negv neg-tint")}</div>
+  <div class="grid12">
+    <section class="card s8"><div class="ch"><div class="seg dark" role="tablist"><button data-cf="cat" aria-pressed="${cfTab==="cat"}">Categories</button><button data-cf="503020" aria-pressed="${cfTab!=="cat"}">50/30/20 view</button></div><button class="btn btn-ghost btn-sm" data-go="1">Edit budget</button></div>
+      ${cfTab==="cat"?`<div class="tbl"><table><thead><tr><th>Category</th><th class="r">Monthly</th><th class="r">Annual</th><th class="r">% of take-home</th><th style="width:26%">Share</th><th>Type</th></tr></thead><tbody>
+        ${rows.map(([k,l,t])=>`<tr><td><div class="cat"><span class="chip-ic">${icon(CAT_IC[k],15)}</span>${l}</div></td><td class="r num"><b>${$f(e[k])}</b></td><td class="r num">${$f(e[k]*12)}</td><td class="r num">${((+e[k]||0)/th*100).toFixed(1)}%</td><td><div class="bar"><i class="${t==="Essential"?"good":"warn"}" style="width:${(+e[k]||0)/mx*100}%"></i></div></td><td>${pill(t==="Essential"?"good":"warn",t)}</td></tr>`).join("")}
+        <tr><td><div class="cat"><span class="chip-ic gold">${icon("piggy",15)}</span>Saving & investing</div></td><td class="r num"><b>${$f(c.saveInvest)}</b></td><td class="r num">${$f(c.saveInvest*12)}</td><td class="r num">${(c.saveInvest/th*100).toFixed(1)}%</td><td><div class="bar"><i style="width:${Math.min(100,c.saveInvest/mx*100)}%;background:var(--c1)"></i></div></td><td>${pill("na","Saving")}</td></tr>
+        <tr class="total"><td>Total out</td><td class="r num">${$f(c.expenses+c.saveInvest)}</td><td class="r num">${$f((c.expenses+c.saveInvest)*12)}</td><td class="r num">${((c.expenses+c.saveInvest)/th*100).toFixed(1)}%</td><td colspan="2" class="${c.surplus>=0?"pos":"neg"}">${c.surplus>=0?$f(c.surplus)+" left each month":$f(-c.surplus)+" short each month"}</td></tr></tbody></table></div>`
+      :`<div style="display:grid;gap:22px">${fifty.map(([l,d,v,t])=>{ const r=v/base, st=l==="Savings"?(r>=t?["good","On target"]:["warn","Below target"]):(r<=t?["good","Within target"]:["bad","Over target"]); return `<div class="hb"><div class="hb-l"><span><b>${l}</b> <span class="muted">· ${d}</span></span><span class="num"><b>${$f(v)}</b> · ${(r*100).toFixed(1)}% <span class="muted">(target ${t*100}%)</span></span></div>
+        <div style="position:relative"><div class="bar lg"><i class="${st[0]}" style="width:${Math.min(100,r*100)}%"></i></div><span style="position:absolute;top:-4px;left:${t*100}%;width:2px;height:18px;background:var(--ink)"></span></div>${pill(st[0],st[1])}</div>`; }).join("")}
+        <p class="hint">The 50/30/20 rule splits take-home pay into needs, wants and savings. The black marker shows each target.</p></div>`}
+    </section>
+    <section class="card s4"><div class="ch"><h3>Spending by category</h3><span class="muted" style="font-size:12.5px">Monthly</span></div>${cashDonut(c)}</section>
+    <section class="card s12"><div class="ch"><h3>Budget health</h3></div><div class="facts f3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      ${[["Savings rate",pct(c.savingsRate),"Goal 15–20% of gross",c.savingsRate>=.15?"good":"warn"],["Debt-to-income",pct(c.dti),"Housing + debt ÷ gross; under 36% is healthy",c.dti<=.36?"good":"bad"],["Emergency fund",c.emMonths.toFixed(1)+" months","Goal 6 months · "+$f(c.efTarget),toneScore(c.sc.emergency)],["Housing share",pct((+e.housing||0)/(c.grossMonthly||1)),"Under 28% of gross is healthy",((+e.housing||0)/(c.grossMonthly||1))<=.28?"good":"warn"]].map(([l,v,h,t])=>`<div class="hb" style="gap:6px"><span class="hint">${l}</span><span class="kv num" style="font-size:26px">${v}</span><span>${pill(t,h)}</span></div>`).join("")}</div></section>
+  </div></div>`; }
+
+function pageProtection(){
+  if(!hasData()) return emptyState();
+  const c=calc(), gapAll=sum(c.people.map(x=>x.gap)), covered=c.totalNeed-gapAll, pols=S.insurance.has==="yes"?S.insurance.policies:[];
+  const nm=o=>o==="spouse"?(S.profile.spouseName||"Spouse"):firstName(S.profile.name);
+  const flag=p=>p.type==="Group/employer"?pill("warn","Ends if you leave the job"):p.type==="Term"&&c.kids.length&&(+p.yearsLeft||0)<18-Math.min(...c.kids.map(k=>+k.age||0))?pill("warn","Ends before kids are grown"):pill("good","OK");
+  return `<div style="display:grid;gap:22px">
+  <div class="summary-line"><span>${c.people.length} insured ${c.people.length>1?"earners":"earner"} · <b>${$f(c.totalNeed)}</b> DIME need</span><span>Covered <b>${$f(covered)}</b> · Gap <b class="neg">${$f(gapAll)}</b></span></div>
+  <section class="card"><div class="grid12" style="align-items:center">
+    <div class="s7"><div class="feat">${ring(c.totalNeed?covered/c.totalNeed:1,190,"covered")}<div style="display:grid;gap:14px;min-width:0">
+      <div style="display:flex;gap:10px;align-items:center"><span class="chip-ic gold">${icon("shield",16)}</span><h2>Family protection</h2></div>
+      <div><span class="big num">${$f(covered)}</span> <span class="muted">of ${$f(c.totalNeed)}</span></div>
+      <div class="facts"><div class="fact"><span>Debt + final expenses</span><b class="num">${$f(c.D)}</b></div><div class="fact"><span>Mortgage</span><b class="num">${$f(c.M)}</b></div><div class="fact"><span>Education fund</span><b class="num">${$f(c.E)}</b></div><div class="fact"><span>Income replaced</span><b>${c.yrs} years</b></div><div class="fact"><span>Liquid assets counted</span><b class="num">${$f(c.liquid)}</b></div><div class="fact"><span>Existing insurance</span><b class="num">${$f(sum(c.people.map(x=>x.cover)))}</b></div></div></div></div></div>
+    <div class="s5" style="display:grid;gap:14px"><h3>DIME need vs. what's covered</h3>${dimeChart(c)}</div></div></section>
+  <div class="goals" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${c.people.map(x=>{ const r=x.need?clamp((x.need-x.gap)/x.need):1, [t,l]=goalTone(r); return `<div class="gcard"><div class="gh"><span class="chip-ic gold">${icon("users",16)}</span><b>${esc(x.who)}</b>${pill(t,l)}</div>
+    <div class="gv"><span class="num"><b>${$k(x.need-x.gap)}</b> <span class="muted">/ ${$k(x.need)}</span></span><span class="serif">${Math.round(r*100)}%</span></div><div class="bar"><i class="${t}" style="width:${r*100}%"></i></div>
+    <div class="facts"><div class="fact"><span>Income replaced</span><b class="num">${$f(x.I)}</b></div><div class="fact"><span>Insurance today</span><b class="num">${$f(x.cover)}</b></div><div class="fact"><span>Gap</span><b class="num ${x.gap?"neg":"pos"}">${$f(x.gap)}</b></div><div class="fact"><span>Est. 20-yr term*</span><b class="num">${x.gap?$f(termEstimate(x.gap,x.age))+"/mo":"—"}</b></div></div>
+    <div class="note">${x.gap?`A ${x.age<50?"20- or 30-year term":"term or guaranteed"} policy for about ${$k(Math.ceil(x.gap/50000)*50000)} would close this gap.`:"Fully protected."}</div></div>`; }).join("")}</div>
+  <div class="grid12">
+    <section class="card s7"><div class="ch"><h3>Policies in force</h3><button class="btn btn-ghost btn-sm" data-go="4">${icon("plus",14)} Add policy</button></div>
+      ${pols.length?`<div class="tbl"><table><thead><tr><th>Insured</th><th>Type</th><th class="r">Death benefit</th><th class="r">Premium</th><th class="r">Years left</th><th>Note</th></tr></thead><tbody>${pols.map(p=>`<tr><td><b>${esc(nm(p.owner))}</b></td><td><span class="tag">${esc(p.type)}</span></td><td class="r num"><b>${$f(p.face)}</b></td><td class="r num">${p.premium?$f(p.premium)+"/mo":"—"}</td><td class="r num">${p.type==="Term"?(p.yearsLeft||"—"):"—"}</td><td>${flag(p)}</td></tr>`).join("")}
+      <tr class="total"><td>Total</td><td></td><td class="r num">${$f(sum(pols.map(p=>p.face)))}</td><td class="r num">${$f(sum(pols.map(p=>p.premium)))}/mo</td><td></td><td></td></tr></tbody></table></div>`:`<p class="muted">No life insurance policies entered.</p>`}
+      <div class="facts f3"><div class="fact"><span>Disability coverage</span>${S.insurance.disability?pill("good","In place"):pill("bad","None")}</div><div class="fact"><span>Health insurance</span>${S.insurance.health?pill("good","In place"):pill("bad","None")}</div><div class="fact"><span>Long-term care</span>${S.insurance.ltc?pill("good","In place"):pill("na","None")}</div></div></section>
+    <section class="card s5"><h3>How DIME is calculated</h3><ol style="margin:0;padding-left:18px;display:grid;gap:8px;font-size:13.5px;color:var(--ink2)">
+      <li><b>Debt</b>: credit cards, auto, student and other loans, plus final expenses (${$f(c.D)}).</li><li><b>Income</b>: each earner's income × ${c.yrs} years so the family can keep living.</li><li><b>Mortgage</b>: pay off the home so the family can stay (${$f(c.M)}).</li><li><b>Education</b>: ${$f(S.dime.eduPerChild)} per child × ${c.kids.length} (${$f(c.E)}).</li><li>Then subtract liquid assets (${$f(c.liquid)}) and existing insurance to find the gap.</li></ol>
+      ${gapAll?`<div class="card tint-gold" style="box-shadow:none;padding:18px"><h3 class="serif" style="font-size:19px">Scenario: close the gap</h3><p style="font-size:13.5px">${c.people.filter(x=>x.gap).map(x=>`${esc(x.who)}: about ${$k(Math.ceil(x.gap/50000)*50000)} of term coverage, roughly ${$f(termEstimate(x.gap,x.age))}/mo`).join(". ")}. Together about <b>${$f(sum(c.people.map(x=>x.gap?termEstimate(x.gap,x.age):0)))}/month</b>, ${pct(sum(c.people.map(x=>x.gap?termEstimate(x.gap,x.age):0))/(c.budget||1))} of your plan budget.</p><p class="hint">*Rough estimate for a healthy non-smoker; actual premiums depend on health, age and carrier.</p></div>`:""}</section>
+  </div></div>`; }
+
+function pageGoals(){
+  if(!hasData()) return emptyState();
+  const c=calc(), yr=new Date().getFullYear(), r=c.retTarget?Math.min(1,c.retProj/c.retTarget):1;
+  const rows=[[`Retirement at ${S.retirement.retireAge}`,c.retTarget,c.retProj,c.retExtra+(+S.retirement.monthly||0)+c.match,(+S.retirement.monthly||0)+c.match,yr+c.yRet,r]];
+  c.ckids.forEach(k=>rows.push([`College: ${k.name}`,k.target,k.proj,k.monthly+k.monthlyNeed,k.monthly,yr+k.yTo,k.target?Math.min(1,k.proj/k.target):1]));
+  const efNeed=Math.max(0,c.efTarget-(+S.assets.cash||0)); const efAct=c.actions.find(a=>a.key==="ef");
+  rows.push(["Emergency fund",c.efTarget,+S.assets.cash||0,efAct?efAct.amt:0,efAct?efAct.funded:0,yr+Math.ceil((c.H||12)/12),c.efTarget?Math.min(1,(+S.assets.cash||0)/c.efTarget):1]);
+  return `<div style="display:grid;gap:22px">
+  <div class="summary-line"><span>${rows.length} long-term goals · <b>${$f(sum(rows.map(x=>Math.min(x[2],x[1]))))}</b> projected of ${$f(sum(rows.map(x=>x[1])))}</span><span>Planned <b>${$f(sum(rows.map(x=>x[4])))}</b>/mo · Required <b class="neg">${$f(sum(rows.map(x=>x[3])))}</b>/mo</span></div>
+  <section class="card"><div class="grid12" style="align-items:center">
+    <div class="s3" style="display:grid;justify-items:center;gap:12px">${ring(r,190,"on track")}${pill(goalTone(r)[0],goalTone(r)[1])}</div>
+    <div class="s4" style="display:grid;gap:14px"><div style="display:flex;gap:10px;align-items:center"><span class="chip-ic gold">${icon("trend",16)}</span><h2 class="serif" style="font-size:26px">Retirement at ${S.retirement.retireAge}</h2></div>
+      <div><span class="big num">${$f(c.retProj)}</span> <span class="muted">of ${$f(c.retTarget)}</span></div>
+      <div class="facts"><div class="fact"><span>Saved today</span><b class="num">${$f(S.assets.retirement)}</b></div><div class="fact"><span>Years to go</span><b>${c.yRet}</b></div><div class="fact"><span>Monthly now</span><b class="num">${$f((+S.retirement.monthly||0)+c.match)}</b></div><div class="fact"><span>Extra needed</span><b class="num ${c.retExtra?"neg":"pos"}">${$f(c.retExtra)}/mo</b></div><div class="fact"><span>Desired income</span><b class="num">${$f(c.desired)}/mo</b></div><div class="fact"><span>Social Security + pension</span><b class="num">${$f(S.retirement.ssMonthly)}/mo</b></div></div>
+      <span class="hint">Accounts: ${esc((S.retirement.accounts||[]).join(", ")||"none entered")}</span></div>
+    <div class="s5" style="display:grid;gap:10px"><div class="ch"><h3>Projected vs. needed savings</h3><div class="legend"><span><i style="background:var(--c2)"></i>Projected</span><span><i style="background:var(--gold)"></i>Needed</span></div></div>${retChart(c)}</div></div></section>
+  <div class="goals">${c.ckids.map(k=>{ const rr=k.target?Math.min(1,k.proj/k.target):1,[t,l]=goalTone(rr); return `<div class="gcard"><div class="gh"><span class="chip-ic gold">${icon("cap",16)}</span><b>${esc(k.name)}'s college</b>${pill(t,l)}</div>
+    <div class="gv"><span class="num"><b>${$k(k.proj)}</b> <span class="muted">/ ${$k(k.target)}</span></span><span class="serif">${Math.round(rr*100)}%</span></div><div class="bar"><i class="${t}" style="width:${rr*100}%"></i></div>
+    <div class="facts"><div class="fact"><span>Plan</span><b>${esc(k.type)}</b></div><div class="fact"><span>College starts</span><b>${yr+k.yTo}</b></div><div class="fact"><span>Needed / mo</span><b class="num">${$f(k.monthly+k.monthlyNeed)}</b></div><div class="fact"><span>Planned / mo</span><b class="num">${$f(k.monthly)}</b></div></div>
+    <div class="note">${k.gap?(k.type==="None yet"?`Open a 529 plan and add about ${$f(k.monthlyNeed)}/mo.`:`Add ${$f(k.monthlyNeed)}/mo to stay on track.`):"On track for year one."}</div></div>`; }).join("")}
+    ${(()=>{ const rr=c.efTarget?Math.min(1,(+S.assets.cash||0)/c.efTarget):1,[t,l]=goalTone(rr); return `<div class="gcard"><div class="gh"><span class="chip-ic gold">${icon("umbrella",16)}</span><b>Emergency fund</b>${pill(t,l)}</div><div class="gv"><span class="num"><b>${$k(S.assets.cash)}</b> <span class="muted">/ ${$k(c.efTarget)}</span></span><span class="serif">${Math.round(rr*100)}%</span></div><div class="bar"><i class="${t}" style="width:${rr*100}%"></i></div><div class="facts"><div class="fact"><span>Months saved</span><b>${c.emMonths.toFixed(1)}</b></div><div class="fact"><span>Still needed</span><b class="num">${$f(efNeed)}</b></div></div><div class="note">Six months of expenses in a high-yield savings account.</div></div>`; })()}
+    ${(()=>{ const rr=c.estDone/c.estItems.length,[t,l]=goalTone(rr); return `<div class="gcard"><div class="gh"><span class="chip-ic gold">${icon("scroll",16)}</span><b>Estate plan</b>${pill(t,l)}</div><div class="gv"><span class="num"><b>${c.estDone}</b> <span class="muted">/ ${c.estItems.length} documents</span></span><span class="serif">${Math.round(rr*100)}%</span></div><div class="bar"><i class="${t}" style="width:${rr*100}%"></i></div><div style="display:grid;gap:6px;font-size:13px">${c.estItems.map(([k2,tt])=>`<div style="display:flex;justify-content:space-between;gap:8px"><span>${tt}</span>${S.estate[k2]?pill("good","Done"):pill("bad","To do")}</div>`).join("")}</div></div>`; })()}
+  </div>
+  <section class="card"><div class="ch"><h3>Goal achievement</h3><span class="muted" style="font-size:12.5px">Required ${$f(sum(rows.map(x=>x[3])))}/mo · planned ${$f(sum(rows.map(x=>x[4])))}/mo</span></div>
+    <div class="tbl"><table><thead><tr><th>Goal</th><th class="r">Target</th><th class="r">Projected</th><th class="r">Required / mo</th><th class="r">Planned / mo</th><th>Target year</th><th>Status</th></tr></thead><tbody>
+    ${rows.map(([g,t,p,req,pl,y,rr])=>{ const [tt,l]=goalTone(rr); return `<tr><td><b>${esc(g)}</b></td><td class="r num">${$f(t)}</td><td class="r num">${$f(p)}</td><td class="r num">${$f(req)}</td><td class="r num ${pl>=req-1?"pos":""}"><b>${$f(pl)}</b></td><td>${y}</td><td>${pill(tt,l)}</td></tr>`; }).join("")}</tbody></table></div></section>
+  <p class="disc">Projections assume ${RATE*100}% annual growth, ${INFL*100}% inflation, ${EDU_INFL*100}% college cost inflation and the 4% withdrawal rule. Not guaranteed; not financial advice.</p></div>`; }
+
+function pageNetworth(){
+  if(!hasData()) return emptyState();
+  const c=calc(), nw=netWorth(), al=nw.aList.filter(x=>x[1]>0), liq=(+S.assets.cash||0)+(+S.assets.investments||0)+(+S.assets.other||0);
+  return `<div style="display:grid;gap:22px">
+  <section class="card"><div class="grid12" style="align-items:center">
+    <div class="s5" style="display:grid;gap:14px"><span class="muted">Net worth = assets − liabilities</span><div class="kv hero num" style="font-size:52px">${$f(nw.net)}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">${pill(nw.debts/(nw.assets||1)<.5?"good":"warn",`Debt-to-asset ${pct(nw.debts/(nw.assets||1))}`)}${pill("na",`Liquid ${$k(liq)}`)}</div>
+      <div class="facts" style="border-top:1px solid var(--line);padding-top:14px"><div class="fact"><span>Assets</span><b class="big num">${$f(nw.assets)}</b></div><div class="fact"><span>Liabilities</span><b class="big num neg">−${$f(nw.debts)}</b></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary btn-sm" data-go="3">Update values</button><button class="btn btn-gold btn-sm" data-nav="report">Net worth statement</button></div></div>
+    <div class="s7" style="display:grid;gap:12px"><h3>Composition</h3>${netWorthBars(c)}</div></div></section>
+  <div class="grid12">
+    <section class="card s8"><div class="ch"><h3>Assets</h3><button class="btn btn-ghost btn-sm" data-go="3">${icon("plus",14)} Edit assets</button></div>
+      <div class="tbl"><table><thead><tr><th>Name</th><th>Type</th><th>Tax treatment</th><th class="r">Current value</th><th class="r">Share</th></tr></thead><tbody>
+      ${nw.aList.map(([l,v,col,t,tx])=>`<tr><td><b>${l}</b>${l==="Retirement accounts"?`<div class="hint">${esc((S.retirement.accounts||[]).join(", "))}</div>`:""}</td><td class="muted">${t}</td><td><span class="tag">${tx}</span></td><td class="r num"><b>${$f(v)}</b></td><td class="r num muted">${(v/(nw.assets||1)*100).toFixed(1)}%</td></tr>`).join("")}
+      <tr class="total"><td>Total assets</td><td></td><td></td><td class="r num">${$f(nw.assets)}</td><td class="r">100%</td></tr></tbody></table></div></section>
+    <section class="card s4"><h3>Allocation</h3>${donut(al,$k(nw.assets),"assets",170)}${donutLegend(al)}</section>
+    <section class="card s12"><div class="ch"><h3>Liabilities</h3><span class="muted">Total <b class="neg num">−${$f(nw.debts)}</b></span></div>
+      <div class="tbl"><table><thead><tr><th>Name</th><th class="r">Balance</th><th class="r">Share of debt</th><th>Notes</th></tr></thead><tbody>
+      ${nw.dList.map(([l,v,col,n])=>`<tr><td><b>${l}</b></td><td class="r num neg"><b>−${$f(v)}</b></td><td class="r num muted">${(v/(nw.debts||1)*100).toFixed(1)}%</td><td>${l==="Credit cards"&&v>0?pill("bad",n):`<span class="muted">${n}</span>`}</td></tr>`).join("")}
+      <tr class="total"><td>Total liabilities</td><td class="r num neg">−${$f(nw.debts)}</td><td class="r">100%</td><td class="muted">Monthly debt payments ${$f(S.expenses.debt)} + housing ${$f(S.expenses.housing)}</td></tr></tbody></table></div></section>
+  </div></div>`; }
+
+function planKpis(c){ const fp=c.needTotal?c.fundedTotal/c.needTotal:1, gap=c.needTotal-c.fundedTotal;
+  return `${kcard("Monthly plan budget","wallet",$f(c.budget),S.goals.monthlyBudget>0?"Set in your goals":"Using your monthly surplus")}${kcard("Plan needs","plan",$f(c.needTotal),`${c.actions.length} priorities per month`)}${kcard("Funded today","check",$f(c.fundedTotal),pill(fp>=1?"good":fp>=.5?"warn":"bad",pct(fp)+" of plan"),"hero")}${kcard("Gap","pct",gap>1?"−"+$f(gap):$f(0),gap>1?"Short of fully funding the plan":"Fully funded",gap>1?"negv neg-tint":"hero")}`; }
+function pageplan(){
+  if(!hasData()) return emptyState();
+  const c=calc(), mx=Math.max(Math.ceil(Math.max(c.needTotal,c.surplus,c.budget)*1.1/100)*100,500);
+  return `<div style="display:grid;gap:22px">
+  <div class="kpis k4" id="planKpis">${planKpis(c)}</div>
+  <div class="grid12">
+    <section class="card s8"><div class="ch"><div><h3>Priorities funded by your budget</h3><div class="sub">Ordered by your goals: ${esc((S.goals.priorities||[]).join(", ")||"default order")} · timeline ${esc(S.goals.horizon)}</div></div></div><div id="planChartBox">${planChart(c)}</div></section>
+    <section class="card s4 gold"><div class="ch"><h3 class="serif" style="font-size:21px">What if…</h3><button class="btn-link" data-act="usesurplus">Use full surplus</button></div>
+      <div class="hb"><div class="hb-l"><span>Monthly plan budget</span><b class="num pos" id="wiVal">${$f(c.budget)}/mo</b></div>
+      <input type="range" id="f-budget-slider" min="0" max="${mx}" step="25" value="${Math.round(c.budget)}" style="--p:${c.budget/mx*100}%" aria-label="Monthly plan budget"><div class="hb-l"><span class="hint">$0/mo</span><span class="hint">${$f(mx)}/mo</span></div></div>
+      <div id="wiResult">${wiResult(c)}</div>
+      <p class="hint">Moving the slider updates your saved plan budget. Your monthly surplus today is ${$f(c.surplus)}.</p></section>
+    <section class="card s12"><div class="ch"><h3>Action timeline</h3></div>${timelineHTML(c)}</section>
+  </div><p class="disc">*Rough illustrative estimates; actual premiums vary. Not financial advice.</p></div>`; }
+function wiResult(c){ const gap=c.needTotal-c.fundedTotal; return gap>1?`<div class="callbox neg"><span>Monthly result: <b class="neg num">−${$f(gap)}</b> short of fully funding every priority.</span></div>`:`<div class="callbox good"><span>Monthly result: every priority is funded${c.budget-c.fundedTotal>1?`, with <b class="num">${$f(c.budget-c.fundedTotal)}</b> to spare`:""}.</span></div>`; }
+
+/* ---------- reports ---------- */
+function fullReportHTML(){
+  const c=calc(), R=recs(c), gapTotal=sum(c.people.map(x=>x.gap)), affordPct=c.needTotal?c.fundedTotal/c.needTotal:1;
+  const M=[["cash","Cash flow",`${pct(c.savingsRate)} saved`,c.surplus>=0?`${$f(c.surplus)} monthly surplus`:`${$f(-c.surplus)} monthly shortfall`],["emergency","Emergency fund",`${c.emMonths.toFixed(1)} months`,`Goal 6 months · ${$f(c.efTarget)}`],["debt","Debt",`${pct(c.dti)} DTI`,"Housing + debt ÷ gross income"],["protection","Family protection",pct(c.protScore)+" covered",`Gap ${$k(gapTotal)}`],["education","College",c.kids.length?pct(c.eduTarget?c.eduProj/c.eduTarget:1)+" funded":"—",c.kids.length?`Gap ${$k(sum(c.ckids.map(k=>k.gap)))}`:"No children listed"],["retirement","Retirement",pct(c.retTarget?Math.min(1,c.retProj/c.retTarget):1)+" on track",`Gap ${$k(c.retGap)}`],["estate","Estate plan",`${c.estDone} of ${c.estItems.length}`,"Documents in place"]];
+  return `<div style="display:grid;gap:20px">
+  <section class="card"><div class="feat">${ringSVG(c.score,180)}<div style="display:grid;gap:10px;min-width:0"><span class="eyebrow">Financial health checkup · ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</span>
+    <h2 class="serif" style="font-size:34px">${esc(famName())}: ${grade(c.score)}</h2>
+    <p class="muted" style="font-size:15.5px;max-width:52em">${c.score>=70?"You've built a solid base. A few focused moves will make it stronger.":c.score>=50?"You have real strengths, and a clear plan will close the gaps that matter most.":"There are important gaps to close, and the plan below shows exactly where to start."} ${c.actions.length?`Your plan has <b>${c.actions.length} priorities</b> and fits <b>${pct(affordPct)}</b> into your ${$f(c.budget)}/month budget today.`:""}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${S.profile.kids.length?pill("na",`${S.profile.kids.length} ${S.profile.kids.length>1?"children":"child"}`):""}${pill("na",$f(c.grossAnnual)+" household income")}${pill("na","Net worth "+$k(netWorth().net))}</div></div></div></section>
+  <div class="goals" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${M.map(([k,l,v,s])=>{ const t=toneScore(c.sc[k]); return `<div class="gcard"><div class="gh"><b>${l}</b>${pill(t,status(c.sc[k])[1])}</div><span class="serif num" style="font-size:24px">${v}</span><span class="hint">${s}</span></div>`; }).join("")}</div>
+  <div class="grid12">
+    <section class="card s5"><h3>What you're doing well</h3><ul class="wins">${wins(c).map(w=>`<li><span class="ck">${icon("check",12)}</span>${esc(w)}</li>`).join("")}</ul></section>
+    <section class="card s7"><h3>Recommendations</h3><div class="recs">${R.map(([t,h,b],i)=>`<div class="rec"><span class="n ${t}">${i+1}</span><div><h4>${esc(h)}</h4><p>${esc(b)}</p></div></div>`).join("")||"<p>No major gaps found.</p>"}</div></section>
+    <section class="card s12"><div class="ch"><h3>DIME protection analysis</h3><span class="muted" style="font-size:12.5px">${c.yrs} years of income replacement</span></div>
+      <div class="tbl"><table><thead><tr><th>Person</th><th class="r">DIME need</th><th class="r">− Assets</th><th class="r">− Insurance</th><th class="r">Gap</th><th class="r">Est. term cost*</th></tr></thead><tbody>
+      ${c.people.map(x=>`<tr><td><b>${esc(x.who)}</b></td><td class="r num">${$f(x.need)}</td><td class="r num">${$f(Math.min(x.need,x.liquid))}</td><td class="r num">${$f(x.cover)}</td><td class="r num ${x.gap?"neg":"pos"}"><b>${$f(x.gap)}</b></td><td class="r num">${x.gap?$f(termEstimate(x.gap,x.age))+"/mo":"—"}</td></tr>`).join("")}</tbody></table></div></section>
+    <section class="card s12"><div class="ch"><h3>Your next plan & affordability</h3>${pill(affordPct>=1?"good":affordPct>=.5?"warn":"bad",pct(affordPct)+" funded")}</div>${planChart(c)}</section>
+    <section class="card s12"><h3>Action timeline</h3>${timelineHTML(c)}</section>
+    <section class="card s12"><h3>Estate planning checklist</h3><div class="facts f3">${c.estItems.map(([k,t])=>`<div style="display:flex;gap:10px;align-items:center">${S.estate[k]?pill("good","Done"):pill("bad","To do")}<span>${t}</span></div>`).join("")}</div></section>
+  </div>
+  <section class="cta"><div style="display:grid;gap:6px;max-width:36em"><h3>Want help putting this plan in place?</h3><p>Book a free 30-minute review with a licensed professional at ${esc(ADVISOR.org)}. Bring this report.</p></div>
+    <div style="display:grid;gap:6px;justify-items:start"><span class="eyebrow" style="color:#C9D6CC">Call or text</span><span class="phone">${esc(ADVISOR.phone)}</span><button class="btn btn-gold btn-sm" data-act="copyphone">Copy number</button></div></section>
+  <p class="disc">*Insurance and disability costs are rough illustrative estimates for a healthy non-smoker; actual premiums depend on health, age, product and carrier. Projections use assumed growth and inflation rates and are not guaranteed. This report is for educational purposes and is not financial, tax or legal advice.</p></div>`; }
+function sheetHTML(){
+  const sheets=sheetData(); sheetTab=Math.min(sheetTab,sheets.length-1); const sh=sheets[sheetTab];
+  const ncol=Math.max(...sh.rows.map(r=>r.length),sh.cols.length), letters="ABCDEFGH", nrows=Math.max(sh.rows.length+3,18);
+  let body=""; for(let r=0;r<nrows;r++){ const row=sh.rows[r]||[]; body+=`<tr><th class="rn">${r+1}</th>${Array.from({length:ncol},(_,ci)=>{ const x=row[ci]; const num=x&&typeof x==="object"&&typeof x.v==="number"; const cls=[num?"r":"",x?.b?"b":"",x?.h?"hd":"",num&&x.v<0?"neg":""].join(" "); return `<td class="${cls}">${cellText(x)}</td>`; }).join("")}</tr>`; }
+  return `<div class="sheetwrap"><div class="xl"><div class="xl-bar">${icon("sheet",16)}<b>${esc(sh.name)}</b><span class="muted">${esc(famName())} · values from your checkup</span></div>
+    <div class="xl-grid"><table><thead><tr><th class="rn"></th>${Array.from({length:ncol},(_,i)=>`<th style="min-width:${(sh.cols[i]||14)*7.5}px">${letters[i]}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>
+    <div class="xl-tabs" role="tablist">${sheets.map((s2,i)=>`<button role="tab" data-sheet="${i}" aria-selected="${i===sheetTab}">${esc(s2.name)}</button>`).join("")}</div></div>
+    <aside class="card xl-chart">${sh.chart().replace(/<h4>/,'<h3>').replace(/<\/h4>/,'</h3>')}</aside></div>`; }
+function pageReport(){
+  if(!hasData()) return emptyState();
+  return `<div style="display:grid;gap:20px"><div class="ch"><div class="seg dark" role="tablist"><button data-rtab="full" aria-pressed="${reportTab==="full"}">Full report</button><button data-rtab="sheet" aria-pressed="${reportTab==="sheet"}">Spreadsheet view</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">${account.dl?`<button class="btn btn-ghost btn-sm" data-act="xlsx">${icon("down",15)} Download Excel</button>`:""}<button class="btn btn-primary btn-sm" data-act="savehist">${icon("save",15)} Save to history</button></div></div>
+    ${reportTab==="sheet"?sheetHTML():fullReportHTML()}</div>`; }
+
+/* ---------- auth ---------- */
+function authHTML(){
+  const ready=account.mode!==null; const ex=(()=>{ const keep=S; S=sample(); const c=calc(); S=keep; return c; })();
+  return `<div class="auth"><section class="auth-l">
+    <div class="logo"><span class="mark"><span>M</span></span><span class="wm">MoneyManager</span></div>
+    <div style="display:grid;gap:18px;margin-top:auto"><span class="eyebrow" style="color:#D9B54A">Personal financial checkup</span><h1>Become your own <em>money manager</em>.</h1>
+    <p class="lede">Answer simple questions about your family, income and goals. MoneyManager runs a full DIME analysis, checks protection, college and retirement, and hands you a dashboard and a plan you can afford.</p></div>
+    <ol>${STEPS.map((s,i)=>`<li><span>${i+1}</span>${s.t}</li>`).join("")}<li><span>★</span>Your dashboard & report</li></ol>
+    <p style="margin-top:auto;font-size:12.5px;color:#9FB5A6">Educational tool · not financial advice</p></section>
+  <section class="auth-r"><div class="signin">
+    ${authPanel()}
+    ${authView==="login"||authView==="register"?`<div class="sample">${ringSVG(ex.score,92)}<div><span class="pill warn">Example</span><p style="margin-top:6px;font-size:13.5px"><b>The Mitchell family</b> scored ${ex.score}/100 with a ${$k(sum(ex.people.map(x=>x.gap)))} protection gap and a ${ex.actions.length}-step plan.</p></div></div>`:""}
+  </div></section></div>`; }
+
+/* ---------- render ---------- */
+const PAGES={dashboard:pageDashboard,checkup:pageCheckup,cashflow:pageCashflow,protection:pageProtection,goals:pageGoals,networth:pageNetworth,plan:pageplan,report:pageReport};
+function render(keepScroll){
+  const y=window.scrollY, root=$("#root");
+  if(view==="auth") root.innerHTML=authHTML();
+  else root.innerHTML=shell(view,PAGES[view]());
+  window.scrollTo({top:keepScroll?y:0});
+}
+function nav(p){ view=p; menuOpen=false; if(p==="checkup") maxStep=Math.max(maxStep,step); render(); }
+
+/* ---------- Events ---------- */
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="f-budget-slider"){ S.goals.monthlyBudget=+el.value||0; const c=calc(); el.style.setProperty("--p",(+el.value/(+el.max||1)*100)+"%");
+    $("#wiVal").textContent=$f(c.budget)+"/mo"; $("#planChartBox").innerHTML=planChart(c); $("#planKpis").innerHTML=planKpis(c); $("#wiResult").innerHTML=wiResult(c); scheduleSave(); return; }
+  const path=el.dataset?.path; if(!path) return;
+  const v = el.dataset.kind==="num"? (Number(String(el.value).replace(/[^0-9.\-]/g,""))||0) : el.dataset.kind==="bool"? el.checked : el.value;
+  setP(path,v);
+  if(el.hasAttribute("data-rerender")) render(true); else refreshLive();
+  scheduleSave();
+});
+document.addEventListener("change",e=>{ const el=e.target; if(el.dataset?.path && el.tagName==="SELECT"){ setP(el.dataset.path,el.value); if(el.hasAttribute("data-rerender")) render(true); else refreshLive(); scheduleSave(); }});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&menuOpen){ menuOpen=false; render(true); } });
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button,[data-act]"); if(!b) return;
+  if(b.dataset.nav){ nav(b.dataset.nav); return; }
+  if(b.dataset.go!==undefined){ go(+b.dataset.go); return; }
+  if(b.dataset.rtab){ reportTab=b.dataset.rtab; render(true); return; }
+  if(b.dataset.sheet!==undefined){ sheetTab=+b.dataset.sheet; render(true); return; }
+  if(b.dataset.cf){ cfTab=b.dataset.cf; render(true); return; }
+  if(b.dataset.themeSet){ document.documentElement.dataset.theme=b.dataset.themeSet; try{ localStorage.setItem("mm:theme",b.dataset.themeSet); }catch(err){} render(true); return; }
+  if(b.dataset.chip){ const arr=getP(b.dataset.chip)||[]; const v=b.dataset.val; const i=arr.indexOf(v); i>=0?arr.splice(i,1):arr.push(v); setP(b.dataset.chip,arr); b.setAttribute("aria-pressed",i<0); refreshLive(); scheduleSave(); return; }
+  if(b.dataset.seg){ setP(b.dataset.seg,b.dataset.val); if(b.dataset.val==="yes"&&!S.insurance.policies.length) S.insurance.policies.push({owner:"primary",type:"Term",face:0,premium:0,yearsLeft:0}); render(true); scheduleSave(); return; }
+  const a=b.dataset.act; if(!a) return;
+  ({
+    menu: ()=>{ menuOpen=!menuOpen; render(true); },
+    recheck: ()=>{ account={mode:null}; render(); boot(); },
+    enter: async()=>{ if(account.mode!=="cloud") return; await loadData(); view="dashboard"; render(); },
+    start: ()=>go(0),
+    next: ()=>go(step+1),
+    back: ()=>go(step-1),
+    finish: ()=>{ maxStep=STEPS.length-1; scheduleSave(); nav("dashboard"); toast("Your financial dashboard and report are ready"); },
+    addkid: ()=>{ S.profile.kids.push({name:"",age:""}); render(true); scheduleSave(); },
+    delkid: ()=>{ const i=+b.dataset.i; S.profile.kids.splice(i,1); S.college.kids.splice(i,1); render(true); scheduleSave(); },
+    addpol: ()=>{ S.insurance.policies.push({owner:"primary",type:"Term",face:0,premium:0,yearsLeft:0}); render(true); scheduleSave(); },
+    delpol: ()=>{ S.insurance.policies.splice(+b.dataset.i,1); render(true); scheduleSave(); },
+    loadsample: ()=>{ const doIt=()=>{ S=sample(); maxStep=STEPS.length-1; step=0; scheduleSave(); nav("dashboard"); toast("Example family loaded. Replace with your own numbers anytime."); };
+      hasData()? confirmBox("Replace your answers?","This fills every step with an example family and replaces what you've entered.","Use example",doIt) : doIt(); },
+    newplan: ()=>confirmBox("Start a new checkup?","This clears your current answers. Your score history is kept.","Start over",()=>{ S=blank(); step=0; maxStep=0; go(0); }),
+    usesurplus: ()=>{ S.goals.monthlyBudget=0; scheduleSave(); render(true); toast("Plan budget now uses your full monthly surplus"); },
+    savehist: saveHistory,
+    xlsx: ()=>exportXlsx(b),
+    copyphone: ()=>{ navigator.clipboard?.writeText(ADVISOR.phone).then(()=>toast("Number copied"),()=>toast(ADVISOR.phone)); }
+  })[a]?.();
+});
+/* ---------- Website auth events ---------- */
+document.addEventListener("submit",e=>{ const f=e.target.dataset?.form; if(!f) return; e.preventDefault(); authSubmit(f,e.target.querySelector("button[type=submit]")); });
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-auth],[data-eye],[data-act='signout']"); if(!b) return;
+  if(b.dataset.eye){ const i=$("#"+b.dataset.eye); if(i){ i.type=i.type==="password"?"text":"password"; b.setAttribute("aria-label",i.type==="password"?"Show password":"Hide password"); } return; }
+  if(b.dataset.act==="signout"){ signOut(); return; }
+  const a=b.dataset.auth;
+  if(a==="resend") resendCode(); else goAuth(a);
+});
+document.addEventListener("input",e=>{
+  const el=e.target; if(el.dataset?.otpi===undefined) return;
+  el.value=el.value.replace(/\D/g,"").slice(-1);
+  if(el.value){ const n=$("#otp-"+(+el.dataset.otpi+1)); if(n) n.focus(); else if(otpValue().length===6){ const f=el.closest("form"); if(f&&f.dataset.form==="verify") f.requestSubmit(); } }
+});
+document.addEventListener("keydown",e=>{ const el=e.target; if(el.dataset?.otpi!==undefined && e.key==="Backspace" && !el.value){ const p=$("#otp-"+(+el.dataset.otpi-1)); if(p){ p.focus(); p.value=""; } } });
+document.addEventListener("paste",e=>{ const el=e.target; if(el.dataset?.otpi===undefined) return; const t=(e.clipboardData?.getData("text")||"").replace(/\D/g,"").slice(0,6); if(!t) return; e.preventDefault(); [...t].forEach((d,i)=>{ const x=$("#otp-"+i); if(x) x.value=d; }); ($("#otp-"+Math.min(t.length,5))||el).focus(); });
+
+/* ---------- Boot ---------- */
+async function boot(){
+  try{ const t=localStorage.getItem("mm:theme"); if(t) document.documentElement.dataset.theme=t; }catch(e){}
+  account={mode:null,dl:{save:async({filename,data})=>{ const blob=data instanceof Blob?data:new Blob([data]); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),3000); return {status:"saved"}; }}};
+  render();
+  if(!sb){ account.mode="none"; render(); return; }
+  try{
+    const {data}=await sb.auth.getSession();
+    if(data?.session){ await onSignedIn(data.session); return; }
+  }catch(e){}
+  account.mode="none"; render();
+  sb.auth.onAuthStateChange((evt)=>{ if(evt==="SIGNED_OUT" && account.mode==="cloud"){ S=blank(); history=[]; account={mode:"none",dl:account.dl}; view="auth"; authView="login"; render(); } });
+}
+boot();
+
+</script>
+</body>
+</html>
